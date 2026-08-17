@@ -1,0 +1,8 @@
+[package]
+name = "naves"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+hecs = "0.11.1"
+macroquad = "0.4.16"
