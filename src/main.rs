@@ -11,9 +11,19 @@ struct Position{
     x: f32,
     y: f32,
 }
+
+#[derive(Debug,Copy, Clone)]
+struct Particle{
+    pos: Vec2,
+    rot: Vec2,
+    vel: f32,
+    life: f32,
+    size: f32,
+    color: Color,
+}
+
 #[derive(Debug, Clone, Copy)]
 struct Velocity(Vec2);
-
 #[derive(Debug)]
 struct Size(f32);
 #[derive(Debug)]
@@ -29,6 +39,8 @@ async fn main() {
 
     let _background = Color::new(0.01, 0.01, 0.05, 1.0);
 
+    let color_player_1 = Color::new(0.9 , 0.1 , 0.4 , 1.0);
+    let color_player_2 = Color::new(0.9 , 0.9 , 0.1 ,1.0);
     world.spawn((
         Player,
         Position{x: screen_width() / 2.0, y: screen_height() / 2.0},
@@ -38,20 +50,14 @@ async fn main() {
         Rot(0.0),
     ));
 
-    
+    let color_asteroid_1 = Color::new(0.3, 0.1, 0.9, 1.0);
+    let color_asteroid_2 = Color::new(0.2, 0.4, 0.95, 1.0);
     for _i in 0..30 {
-        let r = rand::gen_range(0.1, 0.9);
-        let g = rand::gen_range(0.1, 0.9);
-        let b = rand::gen_range(0.1, 0.9);
-
-        let color_asteroid = Color::new(r, g, b, 1.0);
-
-
         let size_rand = rand::gen_range(25.0, 90.0);
         let rand_x = rand::gen_range(size_rand, 1920.0 - size_rand);
         let rand_y = rand::gen_range(size_rand, 1080.0 - size_rand);
         let rand_sides = rand::gen_range(5, 10);
-        
+
         let rand_vel_x = rand::gen_range(-1.0, 1.0);
         let rand_vel_y = rand::gen_range(-1.0, 1.0);
 
@@ -66,7 +72,6 @@ async fn main() {
             Position{x: rand_x, y: rand_y},
             Velocity(Vec2::new(rand_vel_x, rand_vel_y)),
             Speed(rand_speed),
-            color_asteroid,
             Rot(rand_rot),
         ));
     }
@@ -78,7 +83,20 @@ async fn main() {
     let mut retro_camera = Camera2D::from_display_rect(Rect::new(0.0, 0.0, 1920.0, 1080.0));
     retro_camera.render_target = Some(render_target.clone());
 
+    const MAX_PARTICLES : usize = 100;
+    let mut p_index:usize = 0;
+
     let mut entities_collide: Vec<(Entity, Vec2, Vec2)> = Vec::with_capacity(26);
+
+    let particle_color = Color::new(1.0, 0.3, 0.1, 1.0);
+    let mut particles = [Particle{
+        pos: Vec2::ZERO,
+        rot: Vec2::ZERO,
+        vel: 0.0,
+        life:0.0,
+        size: 0.0,
+        color: particle_color
+    }; MAX_PARTICLES];
 
     loop{
         let dt = get_frame_time();
@@ -94,7 +112,7 @@ async fn main() {
 
             for a in asteroid_2_collide.iter(){
                 for b in asteroid_2_collide.iter(){
-                    
+
                     if a.0 != b.0{
                         let vec_a = Vec2::new(a.1.x, a.1.y);
                         let vec_b = Vec2::new(b.1.x, b.1.y);
@@ -110,7 +128,7 @@ async fn main() {
                                 vec_a.x + repulcion.x * (superposicion * 0.5),
                                 vec_a.y + repulcion.y * (superposicion * 0.5)
                             );
-                            
+
                             entities_collide.push((a.0, repulcion, new_pos));
                         }
                     }
@@ -121,7 +139,8 @@ async fn main() {
         for (enti,_type, pos, speed, vel, rot) in world.query_mut::<(Entity, &Player, &mut Position, &Speed, &mut Velocity, &mut Rot)> () {
             let mut dir = Vec2::ZERO;
             let rot_rad = rot.0.to_radians();
-            
+            let mut state_particle = false;
+
             if pos.x > 1920.0 + 30.0 {
                 pos.x = -30.0
             }
@@ -142,34 +161,60 @@ async fn main() {
                     vel.0 = collide.1;
                 }
             });
-    
+
             if is_key_down(KeyCode::Up)   {
                 dir.x = rot_rad.sin();
                 dir.y = -rot_rad.cos();
+                state_particle = true;
             }
             if is_key_down(KeyCode::Down) {
                 dir.x = -rot_rad.sin();
                 dir.y = rot_rad.cos();
+                state_particle = true;
             }
             if is_key_down(KeyCode::Right){rot.0 += 5.0}
             if is_key_down(KeyCode::Left) {rot.0 -= 5.0}
 
 
-    
+
             if dir.length_squared() > 0.0 {
                 dir = dir.normalize();
             }
 
             let target = dir * speed.0;
 
-            vel.0 = vel.0.lerp(target, 2.0 * dt);
+            vel.0 = vel.0.lerp(target, 1.0 * dt);
 
             pos.x += vel.0.x;
             pos.y += vel.0.y;
+
+            if state_particle{    
+                if particles[p_index].life <= 0.0 {
+                    let p = Particle{
+                        pos: vec2(pos.x, pos.y),
+                        rot: vec2(
+                            -rot_rad.sin() + rand::gen_range(-0.5 , 0.5),
+                            rot_rad.cos() + rand::gen_range(-0.5 , 0.5)
+                        ),
+                        vel: 300.0,
+                        life: 5.0,
+                        size: rand::gen_range(10.0, 20.0),
+                        color: particle_color
+                    };
+
+                    particles[p_index] = p;
+                }
+
+                if p_index == MAX_PARTICLES - 1{
+                    p_index = 0;
+                }else{
+                    p_index += 1;
+                }
+            }
         }
 
         for (entity, _type, pos, rot, vel, speed, size) in world.query_mut::<(Entity, &Asteriod, &mut Position, &mut Rot, &mut Velocity, &Speed, &Size)>(){
-            
+
             entities_collide.iter().for_each(|collide| {
                 if collide.0 == entity{
                     pos.x = collide.2.x;
@@ -201,6 +246,18 @@ async fn main() {
 
         // <-------- RENDER --------> //
 
+        particles.iter_mut().for_each(|p|{
+            if p.life > 0.0 {
+                p.pos.x = p.pos.x + p.rot.x * p.vel * dt;
+                p.pos.y = p.pos.y + p.rot.y * p.vel * dt;
+                p.color.a -= 0.03;
+                if p.life < 3.0 {p.color.g += 0.2 ;p.color.b += 0.2;}
+                p.life = p.life - 0.1;
+                p.size = p.size - 0.8;
+                draw_circle(p.pos.x, p.pos.y, p.size, p.color);
+            }
+        });
+
         for (_type, pos, size, rot) in world.query_mut::<(&Player, &Position, &Size, &Rot)>() {
             let sen_a = rot.0.to_radians().sin();
             let cos_a = rot.0.to_radians().cos();
@@ -214,21 +271,21 @@ async fn main() {
             );
 
             let vec_b = vec2(
-                pos.x - cos_a * b - sen_a * h, 
+                pos.x - cos_a * b - sen_a * h,
                 pos.y - sen_a * b + cos_a * h
             );
 
             let vec_c = vec2(
-                pos.x + cos_a * b - sen_a * h, 
+                pos.x + cos_a * b - sen_a * h,
                 pos.y + sen_a * b + cos_a * h
             );
-            
-            draw_poly_lines(pos.x, pos.y, 3, size.0 + 3.0, rot.0 + 30.0 , 14.0, BLUE);
-            draw_triangle(vec_a, vec_b, vec_c, SKYBLUE);
+
+            draw_poly_lines(pos.x, pos.y, 3, size.0 + 3.0, rot.0 + 30.0 , 14.0, color_player_1);
+            draw_triangle(vec_a, vec_b, vec_c, color_player_2);
             //draw_circle_lines(pos.x, pos.y, size.0, 1., BLACK); // area de colision
         }
 
-        for (_type, pos, size, sides, rot, color) in world.query_mut::<(&Asteriod, &Position, &Size, &Sides, &mut Rot, &Color)>() {
+        for (_type, pos, size, sides, rot) in world.query_mut::<(&Asteriod, &Position, &Size, &Sides, &mut Rot)>() {
             // let cos = rot.0.to_radians().cos();
             // let sen = rot.0.to_radians().sin();
 
@@ -243,7 +300,8 @@ async fn main() {
             // draw_circle_lines(vec_a.x, vec_a.y, 10.0, 4.5, *color);
             // draw_circle_lines(vec_b.x, vec_b.y, 10.0, 4.5, *color);
 
-            draw_poly_lines(pos.x, pos.y, sides.0, size.0, rot.0, 8.5, *color)
+            draw_poly_lines(pos.x, pos.y, sides.0, size.0, rot.0, 8.5, color_asteroid_1);
+            draw_poly_lines(pos.x, pos.y, sides.0, size.0 - (size.0 / 4.0), rot.0, 4.5, color_asteroid_2)
         }
 
         set_default_camera();
