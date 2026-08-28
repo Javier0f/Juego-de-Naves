@@ -22,6 +22,14 @@ struct Particle{
     color: Color,
 }
 
+#[derive(Debug,Copy,Clone)]
+struct Bullet{
+    pos: Vec2,
+    rot: Vec2,
+    vel: f32,
+    life:f32,
+}
+
 #[derive(Debug, Clone, Copy)]
 struct Velocity(Vec2);
 #[derive(Debug)]
@@ -39,13 +47,15 @@ async fn main() {
 
     let _background = Color::new(0.01, 0.01, 0.05, 1.0);
 
+    let _bullet_color = Color::new(0.9, 0.8, 0.2, 1.0);
+
     let color_player_1 = Color::new(0.9 , 0.1 , 0.4 , 1.0);
     let color_player_2 = Color::new(0.9 , 0.9 , 0.1 ,1.0);
     world.spawn((
         Player,
         Position{x: screen_width() / 2.0, y: screen_height() / 2.0},
         Size(30.0),
-        Speed(6.0),
+        Speed(3.0),
         Velocity(Vec2::ZERO),
         Rot(0.0),
     ));
@@ -53,7 +63,7 @@ async fn main() {
     let color_asteroid_1 = Color::new(0.3, 0.1, 0.9, 1.0);
     let color_asteroid_2 = Color::new(0.2, 0.4, 0.95, 1.0);
     for _i in 0..30 {
-        let size_rand = rand::gen_range(25.0, 90.0);
+        let size_rand = rand::gen_range(31.0, 90.0);
         let rand_x = rand::gen_range(size_rand, 1920.0 - size_rand);
         let rand_y = rand::gen_range(size_rand, 1080.0 - size_rand);
         let rand_sides = rand::gen_range(5, 10);
@@ -86,7 +96,18 @@ async fn main() {
     const MAX_PARTICLES : usize = 100;
     let mut p_index:usize = 0;
 
+    const MAX_BULLET : usize = 10;
+    let mut b_index: usize = 0;
+    let mut b_cooldown = 0.0;
+
     let mut entities_collide: Vec<(Entity, Vec2, Vec2)> = Vec::with_capacity(26);
+
+    let mut bullet_vec = [Bullet{
+        pos: Vec2::ZERO,
+        rot: Vec2::ZERO,
+        vel: 0.0,
+        life: 0.0,
+    }; MAX_BULLET];
 
     let particle_color = Color::new(1.0, 0.3, 0.1, 1.0);
     let mut particles = [Particle{
@@ -98,21 +119,44 @@ async fn main() {
         color: particle_color
     }; MAX_PARTICLES];
 
+    let mut asteroid_pos_vec = Vec2::ZERO;
+    let mut destroid_asteroid: Entity = world.spawn(()); 
+
     loop{
         let dt = get_frame_time();
         set_camera(&retro_camera);
         clear_background(_background);
+
+        let _bullet_color = Color::new(
+            rand::gen_range(0.0, 6.0),
+            rand::gen_range(0.0, 1.0),
+            rand::gen_range(0.0, 6.0),
+            1.0
+        );
 
         // <----- MOVEMENT AND COLLISION -----> //
 
 
         {// <-------- COLLISION --------> //
             let mut query = world.query::<(Entity, &Position, &Velocity, &Size, &Speed)>();
-            let asteroid_2_collide: Vec<_> = query.iter().collect::<Vec<_>>();
+            let mut asteroid_2_collide: Vec<_> = query.iter().collect::<Vec<_>>();
+
+            bullet_vec.iter_mut().for_each(|b|{
+                asteroid_2_collide.iter_mut().for_each(|a|{
+                    if b.life > 0.0 {
+                        asteroid_pos_vec = vec2(a.1.x, a.1.y);
+                        let distance = b.pos.distance(asteroid_pos_vec);
+
+                        if distance < a.3.0 && distance > 30.0{
+                            b.life = 0.0;
+                            destroid_asteroid = a.0;
+                        }
+                    }
+                });
+            });
 
             for a in asteroid_2_collide.iter(){
                 for b in asteroid_2_collide.iter(){
-
                     if a.0 != b.0{
                         let vec_a = Vec2::new(a.1.x, a.1.y);
                         let vec_b = Vec2::new(b.1.x, b.1.y);
@@ -172,8 +216,30 @@ async fn main() {
                 dir.y = rot_rad.cos();
                 state_particle = true;
             }
-            if is_key_down(KeyCode::Right){rot.0 += 5.0}
-            if is_key_down(KeyCode::Left) {rot.0 -= 5.0}
+            if is_key_down(KeyCode::Right){rot.0 += 3.0}
+            if is_key_down(KeyCode::Left) {rot.0 -= 3.0}
+
+            b_cooldown -= 0.1;
+            if is_key_down(KeyCode::Space){
+
+                if b_index >= MAX_BULLET { b_index = 0};
+                if bullet_vec[b_index].life < 0.1 {
+                    if b_cooldown < 0.1 {
+                        let bullet = Bullet{
+                            pos: vec2(pos.x, pos.y),
+                            rot: vec2(rot_rad.sin() + rand::gen_range(-0.1,0.1),
+                                     -rot_rad.cos() + rand::gen_range(-0.1,0.1)
+                                    ),
+                            vel: 10.0,
+                            life: 20.0,
+                        };
+                        
+                        bullet_vec[b_index] = bullet;
+                        b_cooldown = 0.8;
+                        b_index += 1;
+                    };
+                };
+            }
 
 
 
@@ -197,7 +263,7 @@ async fn main() {
                             rot_rad.cos() + rand::gen_range(-0.5 , 0.5)
                         ),
                         vel: 300.0,
-                        life: 5.0,
+                        life: 3.0,
                         size: rand::gen_range(10.0, 20.0),
                         color: particle_color
                     };
@@ -246,14 +312,23 @@ async fn main() {
 
         // <-------- RENDER --------> //
 
+        bullet_vec.iter_mut().for_each(|b|{
+            if b.life > 0.0 {
+                b.pos.x = b.pos.x + b.rot.x * b.vel;
+                b.pos.y = b.pos.y + b.rot.y * b.vel;
+                draw_circle(b.pos.x, b.pos.y, 7.0, _bullet_color);
+                b.life -= 0.1;
+            }
+        });
+
         particles.iter_mut().for_each(|p|{
             if p.life > 0.0 {
                 p.pos.x = p.pos.x + p.rot.x * p.vel * dt;
                 p.pos.y = p.pos.y + p.rot.y * p.vel * dt;
                 p.color.a -= 0.03;
-                if p.life < 3.0 {p.color.g += 0.2 ;p.color.b += 0.2;}
                 p.life = p.life - 0.1;
                 p.size = p.size - 0.8;
+                if p.life < 2.0 {p.color.g += 0.2 ;p.color.b += 0.2;}
                 draw_circle(p.pos.x, p.pos.y, p.size, p.color);
             }
         });
@@ -283,6 +358,12 @@ async fn main() {
             draw_poly_lines(pos.x, pos.y, 3, size.0 + 3.0, rot.0 + 30.0 , 14.0, color_player_1);
             draw_triangle(vec_a, vec_b, vec_c, color_player_2);
             //draw_circle_lines(pos.x, pos.y, size.0, 1., BLACK); // area de colision
+
+            // let dis = 80.0;
+
+            // //                      ( 0 , -d )
+            // let hit = vec2(pos.x + cos_a + dis*sen_a , pos.y + sen_a - dis*cos_a);
+            // draw_circle_lines(hit.x , hit.y , 2.0, 5.0, WHITE);
         }
 
         for (_type, pos, size, sides, rot) in world.query_mut::<(&Asteriod, &Position, &Size, &Sides, &mut Rot)>() {
@@ -318,6 +399,8 @@ async fn main() {
                 ..Default::default()
             },
         );
+
+        let _ = world.despawn(destroid_asteroid);
 
         entities_collide.clear();
         next_frame().await;
