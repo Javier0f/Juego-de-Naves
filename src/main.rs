@@ -55,7 +55,7 @@ async fn main() {
         Player,
         Position{x: screen_width() / 2.0, y: screen_height() / 2.0},
         Size(30.0),
-        Speed(3.0),
+        Speed(9.0),
         Velocity(Vec2::ZERO),
         Rot(0.0),
     ));
@@ -96,7 +96,7 @@ async fn main() {
     const MAX_PARTICLES : usize = 100;
     let mut p_index:usize = 0;
 
-    const MAX_BULLET : usize = 10;
+    const MAX_BULLET : usize = 50;
     let mut b_index: usize = 0;
     let mut b_cooldown = 0.0;
 
@@ -229,7 +229,7 @@ async fn main() {
                             pos: vec2(pos.x, pos.y),
                             rot: vec2(rot_rad.sin() + rand::gen_range(-0.1,0.1),
                                      -rot_rad.cos() + rand::gen_range(-0.1,0.1)
-                                    ),
+                                    ).normalize(),
                             vel: 10.0,
                             life: 20.0,
                         };
@@ -249,7 +249,7 @@ async fn main() {
 
             let target = dir * speed.0;
 
-            vel.0 = vel.0.lerp(target, 1.0 * dt);
+            vel.0 = vel.0.lerp(target, 0.4 * dt);
 
             pos.x += vel.0.x;
             pos.y += vel.0.y;
@@ -314,6 +314,20 @@ async fn main() {
 
         bullet_vec.iter_mut().for_each(|b|{
             if b.life > 0.0 {
+
+                if b.pos.x > 1920.0 + 7.0 {
+                    b.pos.x = -7.0
+                }
+                if b.pos.x < -7.0{
+                    b.pos.x = 1920.0 + 7.0
+                }
+                if b.pos.y > 1080.0 + 7.0 {
+                    b.pos.y = -7.0
+                }
+                if b.pos.y < -7.0{
+                    b.pos.y = 1080.0 + 7.0
+                }
+
                 b.pos.x = b.pos.x + b.rot.x * b.vel;
                 b.pos.y = b.pos.y + b.rot.y * b.vel;
                 draw_circle(b.pos.x, b.pos.y, 7.0, _bullet_color);
