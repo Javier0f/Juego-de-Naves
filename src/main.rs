@@ -6,7 +6,10 @@ struct Player;
 #[derive(Debug)]
 struct Asteriod;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug)]
+struct PartAsteroid;
+
+#[derive(Debug, Clone, Copy, PartialEq)]
 struct Position{
     x: f32,
     y: f32,
@@ -71,7 +74,7 @@ async fn main() {
         let rand_vel_x = rand::gen_range(-1.0, 1.0);
         let rand_vel_y = rand::gen_range(-1.0, 1.0);
 
-        let rand_speed = rand::gen_range(40.0, 150.0);
+        let rand_speed = rand::gen_range(30.0, 60.0);
 
         let rand_rot =  rand::gen_range(30.0, 35.0);
 
@@ -122,6 +125,8 @@ async fn main() {
 
     let mut asteroid_pos_vec = Vec2::ZERO;
     let mut destroid_asteroid = [world.spawn(()); MAX_BULLET / 2];
+
+    let mut last_position: Position = Position{x:0.0, y:0.0};
 
     loop{
         let dt = get_frame_time();
@@ -223,7 +228,7 @@ async fn main() {
             if is_key_down(KeyCode::Left) {rot.0 -= 3.0}
 
             b_cooldown -= 0.1;
-            if is_key_down(KeyCode::Space){
+            if is_key_down(KeyCode::A){
 
                 if b_index >= MAX_BULLET { b_index = 0};
                 if bullet_vec[b_index].life < 0.1 {
@@ -312,6 +317,41 @@ async fn main() {
             }
         }
 
+        world.query_mut::<(Entity, &PartAsteroid, &mut Position, &mut Rot, &mut Velocity, &Speed, &Size)>().into_iter().for_each(|p|{
+            let entity = p.0;
+            let pos = p.2;
+            let rot = p.3;
+            let vel = p.4;
+            let speed = p.5;
+            let size = p.6;
+
+            entities_collide.iter().for_each(|collide| {
+                if collide.0 == entity{
+                    pos.x = collide.2.x;
+                    pos.y = collide.2.y;
+                    vel.0 = collide.1
+                }
+            });
+
+            pos.x = pos.x + vel.0.x * speed.0 * dt;
+            pos.y = pos.y + vel.0.y * speed.0 * dt;
+
+            rot.0 = rot.0 + dt * speed.0;
+
+            if pos.x < size.0 * -1.{
+                pos.x = 1920.0 + size.0;
+            }
+            if pos.x > (1920.0 + size.0) {
+                pos.x = -1. * size.0
+            }
+
+            if pos.y < size.0 * -1.{
+                pos.y = 1080.0 + size.0;
+            }
+            if pos.y > (1080.0 + size.0){
+                pos.y = -1. * size.0
+            }
+        });
 
         // <-------- RENDER --------> //
 
@@ -362,10 +402,14 @@ async fn main() {
             draw_triangle(vec_a, vec_b, vec_c, color_player_2);
         }
 
-        for (_type, pos, size, sides, rot) in world.query_mut::<(&Asteriod, &Position, &Size, &Sides, &mut Rot)>() {
+        for (_type, pos, size, sides, rot) in world.query::<(&Asteriod, &Position, &Size, &Sides, &Rot)>().iter() {
             draw_poly_lines(pos.x, pos.y, sides.0, size.0, rot.0, 8.5, color_asteroid_1);
             draw_poly_lines(pos.x, pos.y, sides.0, size.0 - (size.0 / 4.0), rot.0, 4.5, color_asteroid_2)
         }
+
+        world.query::<(&PartAsteroid, &Position, &Size, &Sides, &Rot)>().iter().for_each(|a|{
+            draw_poly_lines(a.1.x, a.1.y, a.3.0, a.2.0, a.4.0, 4.5, color_asteroid_2)
+        });
 
         set_default_camera();
         clear_background(BLACK);
@@ -383,7 +427,40 @@ async fn main() {
         );
 
         destroid_asteroid.iter().for_each(|a| {
-            let _ = world.despawn(*a);
+            
+            {
+                world.query_mut::<(Entity, &Asteriod, &Position)>().into_iter().for_each(|ast|{
+                    if ast.0 == *a {
+                        last_position = *ast.2;
+                    }
+                });
+            }
+            
+            if let Ok(_) = world.despawn(*a) && last_position != (Position{x:0.0, y: 0.0}) {
+                for _i in 0..3{
+                    let size_rand = rand::gen_range(20.0, 30.0);
+                    let rand_sides = rand::gen_range(3, 5);
+    
+                    let rand_vel_x = rand::gen_range(-1.0, 1.0);
+                    let rand_vel_y = rand::gen_range(-1.0, 1.0);
+    
+                    let rand_speed = rand::gen_range(30.0, 35.0);
+    
+                    let rand_rot =  rand::gen_range(30.0, 35.0);
+    
+                    world.spawn((
+                        PartAsteroid,
+                        Size(size_rand),
+                        Sides(rand_sides),
+                        last_position,
+                        Velocity(Vec2::new(rand_vel_x, rand_vel_y)),
+                        Speed(rand_speed),
+                        Rot(rand_rot),
+                    ));
+                }
+
+                last_position = Position{x:0.0, y:0.0};
+            }
         });
 
         entities_collide.clear();
