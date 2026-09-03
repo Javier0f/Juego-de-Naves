@@ -43,6 +43,8 @@ struct Speed(f32);
 struct Rot(f32);
 #[derive(Debug)]
 struct Sides(u8);
+#[derive(Debug)]
+struct Life(u8);
 
 #[macroquad::main("Nave")]
 async fn main() {
@@ -52,8 +54,11 @@ async fn main() {
 
     let _bullet_color = Color::new(0.9, 0.8, 0.2, 1.0);
 
+    let MAX_LIFE = 100;
+
     let color_player_1 = Color::new(0.9 , 0.1 , 0.4 , 1.0);
     let color_player_2 = Color::new(0.9 , 0.9 , 0.1 ,1.0);
+    let mut lifebar_color = GREEN;
     let player = world.spawn((
         Player,
         Position{x: screen_width() / 2.0, y: screen_height() / 2.0},
@@ -61,6 +66,7 @@ async fn main() {
         Speed(5.0),
         Velocity(Vec2::ZERO),
         Rot(0.0),
+        Life(100),
     ));
 
     let color_asteroid_1 = Color::new(0.3, 0.1, 0.9, 1.0);
@@ -188,7 +194,7 @@ async fn main() {
             }
         }
 
-        for (enti,_type, pos, speed, vel, rot) in world.query_mut::<(Entity, &Player, &mut Position, &Speed, &mut Velocity, &mut Rot)> () {
+        for (enti,_type, pos, speed, vel, rot, life) in world.query_mut::<(Entity, &Player, &mut Position, &Speed, &mut Velocity, &mut Rot, &mut Life)> () {
             let mut dir = Vec2::ZERO;
             let rot_rad = rot.0.to_radians();
             let mut state_particle = false;
@@ -211,6 +217,8 @@ async fn main() {
                     pos.x = collide.2.x;
                     pos.y = collide.2.y;
                     vel.0 = collide.1;
+
+                    life.0 -= 5;
                 }
             });
 
@@ -376,7 +384,7 @@ async fn main() {
             }
         });
 
-        for (_type, pos, size, rot) in world.query_mut::<(&Player, &Position, &Size, &Rot)>() {
+        for (_type, pos, size, rot) in world.query::<(&Player, &Position, &Size, &Rot)>().iter() {
             let sen_a = rot.0.to_radians().sin();
             let cos_a = rot.0.to_radians().cos();
 
@@ -393,6 +401,7 @@ async fn main() {
                 pos.y - sen_a * b + cos_a * h
             );
 
+
             let vec_c = vec2(
                 pos.x + cos_a * b - sen_a * h,
                 pos.y + sen_a * b + cos_a * h
@@ -400,6 +409,36 @@ async fn main() {
 
             draw_poly_lines(pos.x, pos.y, 3, size.0 + 3.0, rot.0 + 30.0 , 14.0, color_player_1);
             draw_triangle(vec_a, vec_b, vec_c, color_player_2);
+        }
+
+        for (_type, pos, rot, life) in world.query::<(&Player, &Position, &Rot, &Life)>().iter(){
+
+            let cos = rot.0.to_radians().cos();
+            let sen = rot.0.to_radians().sin();
+
+            let dis = 40.0;
+            
+            let vec_1 = vec2(pos.x + (cos - sen) * dis, pos.y + (sen + cos) * dis);
+            let vec_2 = vec2(pos.x + (-dis * cos - dis * sen), pos.y + (-dis * sen + dis * cos));
+
+            let f = (life.0 as f32) / (MAX_LIFE as f32);
+
+            let vec_c = vec2((vec_1.x + vec_2.x) / 2.0, (vec_1.y + vec_2.y) / 2.0);
+
+            let vec_a = vec_c + f * (vec_1 - vec_c);
+            let vec_b = vec_c + f * (vec_2 - vec_c);
+
+            if life.0 < 75 {
+                lifebar_color = YELLOW
+            }
+            if life.0 < 50{
+                lifebar_color = ORANGE
+            }
+            if life.0 < 25{
+                lifebar_color = RED
+            }
+
+            draw_line(vec_a.x, vec_a.y, vec_b.x, vec_b.y, 10.0 as f32, lifebar_color);
         }
 
         for (_type, pos, size, sides, rot) in world.query::<(&Asteriod, &Position, &Size, &Sides, &Rot)>().iter() {
@@ -428,23 +467,19 @@ async fn main() {
 
         destroid_asteroid.iter().for_each(|a| {
             
-            {
-                world.query_mut::<(Entity, &Asteriod, &Position)>().into_iter().for_each(|ast|{
-                    if ast.0 == *a {
-                        last_position = *ast.2;
-                    }
-                });
-            }
+            world.query_mut::<(Entity, &Asteriod, &Position)>().into_iter().for_each(|ast|{
+                if ast.0 == *a {
+                    last_position = *ast.2;
+                }
+            });
             
             if let Ok(_) = world.despawn(*a) && last_position != (Position{x:0.0, y: 0.0}) {
                 for _i in 0..3{
                     let size_rand = rand::gen_range(20.0, 30.0);
-                    let rand_sides = rand::gen_range(3, 5);
+                    let rand_sides = rand::gen_range(3, 7);
     
                     let rand_vel_x = rand::gen_range(-1.0, 1.0);
                     let rand_vel_y = rand::gen_range(-1.0, 1.0);
-    
-                    let rand_speed = rand::gen_range(30.0, 35.0);
     
                     let rand_rot =  rand::gen_range(30.0, 35.0);
     
@@ -454,7 +489,7 @@ async fn main() {
                         Sides(rand_sides),
                         last_position,
                         Velocity(Vec2::new(rand_vel_x, rand_vel_y)),
-                        Speed(rand_speed),
+                        Speed(80.0),
                         Rot(rand_rot),
                     ));
                 }
