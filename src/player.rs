@@ -1,0 +1,86 @@
+use hecs::World;
+use macroquad::{
+    input::{is_key_down, KeyCode},
+    math::*, 
+    window::{screen_width, screen_height},
+    color::*,
+    shapes::*
+};
+
+struct Player;
+struct Position(Vec2);
+struct Size(f32);
+struct Speed(f32);
+struct Direction(Vec2);
+struct Rotation(f32);
+struct Life(u8);
+
+const PLAYER_COLOR_1: Color = Color::new(0.9 , 0.1 , 0.4 , 1.0);
+const PLAYER_COLOR_2: Color = Color::new(0.9 , 0.9 , 0.1 ,1.0);
+const MAX_LIFE: u8 = 100;
+
+pub fn add_player(world: &mut  World){
+    let _ = world.spawn((
+        Player,
+        Position(vec2(screen_width()+30.0 / 2.0, screen_height() / 2.0)),
+        Direction(Vec2::ZERO),
+        Size(30.0),
+        Life(MAX_LIFE),
+        Speed(5.0),
+        Rotation(0.0),
+    ));
+}
+
+pub fn player_movement(world: &mut World, dt: f32){
+    world.query_mut::<(&Player, &mut Position, &mut Direction, &Speed, &mut Rotation)>().into_iter().for_each(|(_player, pos, dir, speed, rot)|{
+        let mut dire = Vec2::ZERO;
+        let rot_rad = rot.0.to_radians();
+
+        if is_key_down(KeyCode::Up){
+            dire.x = rot_rad.sin();
+            dire.y = -rot_rad.cos();
+        }
+        if is_key_down(KeyCode::Down){
+            dire.x = -rot_rad.sin();
+            dire.y = rot_rad.cos();
+        }
+        if is_key_down(KeyCode::Right){rot.0 += 3.0}
+        if is_key_down(KeyCode::Left){rot.0 -= 3.0}
+
+        if dire.length_squared() > 0.0 {dire = dire.normalize()}
+
+        let target = dire * speed.0;
+
+        dir.0 = dir.0.lerp(target, 1.0 * dt);
+
+        pos.0.x += dir.0.x;
+        pos.0.y += dir.0.y;
+    });
+
+    world.query::<(&Player, &Position, &Size, &Rotation)>().iter().for_each(|(_player, pos, size, rot)|{
+        let sen_a = rot.0.to_radians().sin();
+        let cos_a = rot.0.to_radians().cos();
+
+        let h = size.0 ;
+        let b = size.0 * 1.3;
+
+        let vec_a = vec2(
+            pos.0.x + h * sen_a,
+            pos.0.y - h * cos_a
+        );
+
+        let vec_b = vec2(
+            pos.0.x - cos_a * b - sen_a * h,
+            pos.0.y - sen_a * b + cos_a * h
+        );
+
+
+        let vec_c = vec2(
+            pos.0.x + cos_a * b - sen_a * h,
+            pos.0.y + sen_a * b + cos_a * h
+        );
+
+        draw_poly_lines(pos.0.x, pos.0.y, 3, size.0 + 3.0, rot.0 + 30.0 , 14.0, PLAYER_COLOR_1);
+        draw_triangle(vec_a, vec_b, vec_c, PLAYER_COLOR_2);
+    })
+}

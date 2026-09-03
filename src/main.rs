@@ -2,6 +2,10 @@ use macroquad::prelude::*;
 use macroquad::ui;
 use hecs::{World, Entity};
 
+mod player;
+
+use player::*;
+
 struct Player;
 
 #[derive(Debug)]
@@ -63,7 +67,7 @@ async fn main() {
 
     let _bullet_color = Color::new(0.9, 0.8, 0.2, 1.0);
 
-    let MAX_LIFE = 100;
+    const MAX_LIFE: u8 = 100;
 
     let color_player_1 = Color::new(0.9 , 0.1 , 0.4 , 1.0);
     let color_player_2 = Color::new(0.9 , 0.9 , 0.1 ,1.0);
@@ -77,6 +81,8 @@ async fn main() {
         Rot(0.0),
         Life(100),
     ));
+
+    add_player(&mut world);
 
     let color_asteroid_1 = Color::new(0.3, 0.1, 0.9, 1.0);
     let color_asteroid_2 = Color::new(0.2, 0.4, 0.95, 1.0);
@@ -150,36 +156,36 @@ async fn main() {
         set_camera(&retro_camera);
         clear_background(_background);
 
-        match state_game {
-            State::End => {
-                center.x = screen_width() / 2.0;
-                center.y = screen_height() / 2.0;
-                draw_text("YOU LOSE :(", center.x, center.y, 100.0, color_asteroid_2);
-            },
-            State::Pause => {
-                println!("Juego en pausa");
-            },
-            State::Run => {
+        // match state_game {
+        //     State::End => {
+        //         center.x = screen_width() / 2.0;
+        //         center.y = screen_height() / 2.0;
+        //         draw_text("YOU LOSE :(", center.x, center.y, 100.0, color_asteroid_2);
+        //     },
+        //     State::Pause => {
+        //         println!("Juego en pausa");
+        //     },
+        //     State::Run => {
                 
-            }
-        }
+        //     }
+        // }
 
-        let _bullet_color = Color::new(
-            rand::gen_range(0.0, 6.0),
-            rand::gen_range(0.0, 1.0),
-            rand::gen_range(0.0, 6.0),
-            1.0
-        );
+        // let _bullet_color = Color::new(
+        //     rand::gen_range(0.0, 6.0),
+        //     rand::gen_range(0.0, 1.0),
+        //     rand::gen_range(0.0, 6.0),
+        //     1.0
+        // );
 
-        for (_type, life) in world.query::<(&Player, &Life)>().iter(){
-            if life.0 <= 0 {
-                state_game = State::End;
-            }
-        }
+        // for (_type, life) in world.query::<(&Player, &Life)>().iter(){
+        //     if life.0 <= 0 {
+        //         state_game = State::End;
+        //     }
+        // }
 
-        if ui::root_ui().button(None, "Pause"){
-            state_game = State::Pause;
-        }
+        // if ui::root_ui().button(None, "Pause"){
+        //     state_game = State::Pause;
+        // }
 
         // <----- MOVEMENT AND COLLISION -----> //
 
@@ -228,106 +234,108 @@ async fn main() {
             }
         }
 
-        for (enti,_type, pos, speed, vel, rot, life) in world.query_mut::<(Entity, &Player, &mut Position, &Speed, &mut Velocity, &mut Rot, &mut Life)> () {
-            let mut dir = Vec2::ZERO;
-            let rot_rad = rot.0.to_radians();
-            let mut state_particle = false;
+        // for (enti,_type, pos, speed, vel, rot, life) in world.query_mut::<(Entity, &Player, &mut Position, &Speed, &mut Velocity, &mut Rot, &mut Life)> () {
+        //     let mut dir = Vec2::ZERO;
+        //     let rot_rad = rot.0.to_radians();
+        //     let mut state_particle = false;
 
-            if pos.x > 1920.0 + 30.0 {
-                pos.x = -30.0
-            }
-            if pos.x < -30.0{
-                pos.x = 1920.0 + 30.0
-            }
-            if pos.y > 1080.0 + 30.0 {
-                pos.y = -30.0
-            }
-            if pos.y < -30.0{
-                pos.y = 1080.0 + 30.0
-            }
+        //     if pos.x > 1920.0 + 30.0 {
+        //         pos.x = -30.0
+        //     }
+        //     if pos.x < -30.0{
+        //         pos.x = 1920.0 + 30.0
+        //     }
+        //     if pos.y > 1080.0 + 30.0 {
+        //         pos.y = -30.0
+        //     }
+        //     if pos.y < -30.0{
+        //         pos.y = 1080.0 + 30.0
+        //     }
 
-            entities_collide.iter().for_each(|collide| {
-                if collide.0 == enti{
-                    pos.x = collide.2.x;
-                    pos.y = collide.2.y;
-                    vel.0 = collide.1;
+        //     entities_collide.iter().for_each(|collide| {
+        //         if collide.0 == enti{
+        //             pos.x = collide.2.x;
+        //             pos.y = collide.2.y;
+        //             vel.0 = collide.1;
 
-                    life.0 -= 5;
-                }
-            });
+        //             life.0 -= 5;
+        //         }
+        //     });
 
-            if is_key_down(KeyCode::Up)   {
-                dir.x = rot_rad.sin();
-                dir.y = -rot_rad.cos();
-                state_particle = true;
-            }
-            if is_key_down(KeyCode::Down) {
-                dir.x = -rot_rad.sin();
-                dir.y = rot_rad.cos();
-                state_particle = true;
-            }
-            if is_key_down(KeyCode::Right){rot.0 += 3.0}
-            if is_key_down(KeyCode::Left) {rot.0 -= 3.0}
+        //     if is_key_down(KeyCode::Up)   {
+        //         dir.x = rot_rad.sin();
+        //         dir.y = -rot_rad.cos();
+        //         state_particle = true;
+        //     }
+        //     if is_key_down(KeyCode::Down) {
+        //         dir.x = -rot_rad.sin();
+        //         dir.y = rot_rad.cos();
+        //         state_particle = true;
+        //     }
+        //     if is_key_down(KeyCode::Right){rot.0 += 3.0}
+        //     if is_key_down(KeyCode::Left) {rot.0 -= 3.0}
 
-            b_cooldown -= 0.1;
-            if is_key_down(KeyCode::A){
+        //     b_cooldown -= 0.1;
+        //     if is_key_down(KeyCode::A){
 
-                if b_index >= MAX_BULLET { b_index = 0};
-                if bullet_vec[b_index].life < 0.1 {
-                    if b_cooldown < 0.1 {
-                        let bullet = Bullet{
-                            pos: vec2(pos.x, pos.y),
-                            rot: vec2(rot_rad.sin() + rand::gen_range(-0.1,0.1),
-                                     -rot_rad.cos() + rand::gen_range(-0.1,0.1)
-                                    ).normalize(),
-                            vel: 10.0,
-                            life: 10.0,
-                        };
+        //         if b_index >= MAX_BULLET { b_index = 0};
+        //         if bullet_vec[b_index].life < 0.1 {
+        //             if b_cooldown < 0.1 {
+        //                 let bullet = Bullet{
+        //                     pos: vec2(pos.x, pos.y),
+        //                     rot: vec2(rot_rad.sin() + rand::gen_range(-0.1,0.1),
+        //                              -rot_rad.cos() + rand::gen_range(-0.1,0.1)
+        //                             ).normalize(),
+        //                     vel: 10.0,
+        //                     life: 10.0,
+        //                 };
                         
-                        bullet_vec[b_index] = bullet;
-                        b_cooldown = 0.8;
-                        b_index += 1;
-                    };
-                };
-            }
+        //                 bullet_vec[b_index] = bullet;
+        //                 b_cooldown = 0.8;
+        //                 b_index += 1;
+        //             };
+        //         };
+        //     }
 
 
 
-            if dir.length_squared() > 0.0 {
-                dir = dir.normalize();
-            }
+        //     if dir.length_squared() > 0.0 {
+        //         dir = dir.normalize();
+        //     }
 
-            let target = dir * speed.0;
+        //     let target = dir * speed.0;
 
-            vel.0 = vel.0.lerp(target, 1.0 * dt);
+        //     vel.0 = vel.0.lerp(target, 1.0 * dt);
 
-            pos.x += vel.0.x;
-            pos.y += vel.0.y;
+        //     pos.x += vel.0.x;
+        //     pos.y += vel.0.y;
 
-            if state_particle{    
-                if particles[p_index].life <= 0.0 {
-                    let p = Particle{
-                        pos: vec2(pos.x, pos.y),
-                        rot: vec2(
-                            -rot_rad.sin() + rand::gen_range(-0.5 , 0.5),
-                            rot_rad.cos() + rand::gen_range(-0.5 , 0.5)
-                        ),
-                        vel: 300.0,
-                        life: 1.5,
-                        size: rand::gen_range(10.0, 20.0),
-                        color: particle_color
-                    };
+        //     if state_particle{    
+        //         if particles[p_index].life <= 0.0 {
+        //             let p = Particle{
+        //                 pos: vec2(pos.x, pos.y),
+        //                 rot: vec2(
+        //                     -rot_rad.sin() + rand::gen_range(-0.5 , 0.5),
+        //                     rot_rad.cos() + rand::gen_range(-0.5 , 0.5)
+        //                 ),
+        //                 vel: 300.0,
+        //                 life: 1.5,
+        //                 size: rand::gen_range(10.0, 20.0),
+        //                 color: particle_color
+        //             };
 
-                    particles[p_index] = p;
-                }
+        //             particles[p_index] = p;
+        //         }
 
-                if p_index == MAX_PARTICLES - 1{
-                    p_index = 0;
-                }else{
-                    p_index += 1;
-                }
-            }
-        }
+        //         if p_index == MAX_PARTICLES - 1{
+        //             p_index = 0;
+        //         }else{
+        //             p_index += 1;
+        //         }
+        //     }
+        // }
+
+        player_movement(&mut world, dt);
 
         for (entity, _type, pos, rot, vel, speed, size) in world.query_mut::<(Entity, &Asteriod, &mut Position, &mut Rot, &mut Velocity, &Speed, &Size)>(){
 
