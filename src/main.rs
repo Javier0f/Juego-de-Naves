@@ -1,4 +1,5 @@
 use macroquad::prelude::*;
+use macroquad::ui;
 use hecs::{World, Entity};
 
 struct Player;
@@ -46,9 +47,17 @@ struct Sides(u8);
 #[derive(Debug)]
 struct Life(u8);
 
+enum State{
+    Run,
+    Pause,
+    End,
+}
+
 #[macroquad::main("Nave")]
 async fn main() {
     let mut world = World::new();
+
+    let mut state_game = State::Run;
 
     let _background = Color::new(0.01, 0.01, 0.05, 1.0);
 
@@ -134,10 +143,26 @@ async fn main() {
 
     let mut last_position: Position = Position{x:0.0, y:0.0};
 
+    let mut center = Vec2::ZERO;
+
     loop{
         let dt = get_frame_time();
         set_camera(&retro_camera);
         clear_background(_background);
+
+        match state_game {
+            State::End => {
+                center.x = screen_width() / 2.0;
+                center.y = screen_height() / 2.0;
+                draw_text("YOU LOSE :(", center.x, center.y, 100.0, color_asteroid_2);
+            },
+            State::Pause => {
+                println!("Juego en pausa");
+            },
+            State::Run => {
+                
+            }
+        }
 
         let _bullet_color = Color::new(
             rand::gen_range(0.0, 6.0),
@@ -146,8 +171,17 @@ async fn main() {
             1.0
         );
 
-        // <----- MOVEMENT AND COLLISION -----> //
+        for (_type, life) in world.query::<(&Player, &Life)>().iter(){
+            if life.0 <= 0 {
+                state_game = State::End;
+            }
+        }
 
+        if ui::root_ui().button(None, "Pause"){
+            state_game = State::Pause;
+        }
+
+        // <----- MOVEMENT AND COLLISION -----> //
 
         {// <-------- COLLISION --------> //
             let mut query = world.query::<(Entity, &Position, &Velocity, &Size, &Speed)>();
