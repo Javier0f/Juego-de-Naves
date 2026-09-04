@@ -439,6 +439,39 @@ async fn main() {
 
         let _ = world.despawn(destroid_asteroid);
 
+        // destroid_asteroid.iter().for_each(|a| {
+            
+        //     world.query_mut::<(Entity, &Asteriod, &Position)>().into_iter().for_each(|ast|{
+        //         if ast.0 == *a {
+        //             last_position = *ast.2;
+        //         }
+        //     });
+            
+        //     if let Ok(_) = world.despawn(*a) && last_position != (Position{x:0.0, y: 0.0}) {
+        //         for _i in 0..3{
+        //             let size_rand = rand::gen_range(20.0, 30.0);
+        //             let rand_sides = rand::gen_range(3, 7);
+    
+        //             let rand_vel_x = rand::gen_range(-1.0, 1.0);
+        //             let rand_vel_y = rand::gen_range(-1.0, 1.0);
+    
+        //             let rand_rot =  rand::gen_range(30.0, 35.0);
+    
+        //             world.spawn((
+        //                 PartAsteroid,
+        //                 Size(size_rand),
+        //                 Sides(rand_sides),
+        //                 last_position,
+        //                 Velocity(Vec2::new(rand_vel_x, rand_vel_y)),
+        //                 Speed(80.0),
+        //                 Rot(rand_rot),
+        //             ));
+        //         }
+
+        //         last_position = Position{x:0.0, y:0.0};
+        //     }
+        // });
+
         entities_collide.clear();
         next_frame().await;
     }

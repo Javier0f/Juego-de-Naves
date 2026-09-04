@@ -9,16 +9,20 @@ use macroquad::{
 
 use crate::components::*;
 
+const SCREEN_WIDTH: f32 = 1920.0;
+const SCREEN_HEIGHT: f32 = 1080.0;
+
 const PLAYER_COLOR_1: Color = Color::new(1.0 , 0.52 , 0.32 ,1.0);
 const PLAYER_COLOR_2: Color = Color::new(0.01 , 0.71 , 0.66 , 1.0);
 const MAX_LIFE: u8 = 100;
+const PLAYER_SIZE: f32 = 30.0;
 
 pub fn add_player(world: &mut  World){
     let _ = world.spawn((
         Player,
-        Position(vec2(screen_width()+30.0 / 2.0, screen_height() / 2.0)),
+        Position(vec2((screen_width() + PLAYER_SIZE) / 2.0, (screen_height() + PLAYER_SIZE) / 2.0)),
         Direction(Vec2::ZERO),
-        Size(30.0),
+        Size(PLAYER_SIZE),
         Life(MAX_LIFE),
         Speed(5.0),
         Rotation(0.0),
@@ -26,9 +30,22 @@ pub fn add_player(world: &mut  World){
 }
 
 pub fn player_movement(world: &mut World, dt: f32){
-    world.query_mut::<(&Player, &mut Position, &mut Direction, &Speed, &mut Rotation)>().into_iter().for_each(|(_player, pos, dir, speed, rot)|{
+    world.query_mut::<(&Player, &mut Position, &mut Direction, &Speed, &mut Rotation, &Size)>().into_iter().for_each(|(_player, pos, dir, speed, rot, size)|{
         let mut dire = Vec2::ZERO;
         let rot_rad = rot.0.to_radians();
+
+        if pos.0.x > SCREEN_WIDTH + PLAYER_SIZE{
+            pos.0.x = -PLAYER_SIZE
+        }
+        if pos.0.x < -PLAYER_SIZE -3.0{
+            pos.0.x = SCREEN_WIDTH + PLAYER_SIZE
+        }
+        if pos.0.y > SCREEN_HEIGHT + PLAYER_SIZE{
+            pos.0.y = -PLAYER_SIZE
+        }
+        if pos.0.y < -PLAYER_SIZE -3.0{
+            pos.0.y = SCREEN_HEIGHT + PLAYER_SIZE
+        }
 
         if is_key_down(KeyCode::Up){
             dire.x = rot_rad.sin();
