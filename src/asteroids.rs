@@ -22,8 +22,6 @@ const ASTEROID_COLOR_2: Color = Color::new(0.98, 1.0, 0.07, 1.0);
 const SCREEN_WIDTH: f32 = 1920.0;
 const SCREEN_HEIGHT: f32 = 1080.0;
 
-const PI: f32 = 3.141592;
-
 pub fn add_asteroid(world: &mut World){
     let rand_size = rand::gen_range(30.0, 90.0);
     let rand_x = rand::gen_range(rand_size, SCREEN_WIDTH - rand_size);
@@ -32,7 +30,6 @@ pub fn add_asteroid(world: &mut World){
     let rand_dir_x = rand::gen_range(-1.0, 1.0);
     let rand_dir_y = rand::gen_range(-1.0, 1.0);
     let rand_speed = rand::gen_range(60.0, 90.0);
-    // let rand_rot = rand::gen_range(-30.0, 30.0);
 
     world.spawn((
         Asteroid,

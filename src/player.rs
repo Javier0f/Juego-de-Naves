@@ -15,8 +15,8 @@ struct Direction(Vec2);
 struct Rotation(f32);
 struct Life(u8);
 
-const PLAYER_COLOR_1: Color = Color::new(0.9 , 0.1 , 0.4 , 1.0);
-const PLAYER_COLOR_2: Color = Color::new(0.9 , 0.9 , 0.1 ,1.0);
+const PLAYER_COLOR_1: Color = Color::new(1.0 , 0.52 , 0.32 ,1.0);
+const PLAYER_COLOR_2: Color = Color::new(0.01 , 0.71 , 0.66 , 1.0);
 const MAX_LIFE: u8 = 100;
 
 pub fn add_player(world: &mut  World){
