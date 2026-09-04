@@ -41,6 +41,12 @@ struct Rot(f32);
 #[derive(Debug)]
 struct Sides(u8);
 
+// enum State{
+//     Run,
+//     Pause,
+//     End,
+// }
+
 #[macroquad::main("Nave")]
 async fn main() {
     let mut world = World::new();
@@ -134,8 +140,39 @@ async fn main() {
             1.0
         );
 
-        // <----- MOVEMENT AND COLLISION -----> //
+        // match state_game {
+        //     State::End => {
+        //         center.x = screen_width() / 2.0;
+        //         center.y = screen_height() / 2.0;
+        //         draw_text("YOU LOSE :(", center.x, center.y, 100.0, color_asteroid_2);
+        //     },
+        //     State::Pause => {
+        //         println!("Juego en pausa");
+        //     },
+        //     State::Run => {
+                
+        //     }
+        // }
 
+        // let _bullet_color = Color::new(
+        //     rand::gen_range(0.0, 6.0),
+        //     rand::gen_range(0.0, 1.0),
+        //     rand::gen_range(0.0, 6.0),
+        //     1.0
+        // );
+
+        // for (_type, life) in world.query::<(&Player, &Life)>().iter(){
+        //     if life.0 <= 0 {
+        //         state_game = State::End;
+        //     }
+        // }
+
+        // if ui::root_ui().button(None, "Pause"){
+        //     state_game = State::Pause;
+        // }
+
+
+        // <----- MOVEMENT AND COLLISION -----> //
 
         {// <-------- COLLISION --------> //
             let mut query = world.query::<(Entity, &Position, &Velocity, &Size, &Speed)>();
