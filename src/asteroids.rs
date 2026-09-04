@@ -8,13 +8,7 @@ use macroquad::{
     rand
 };
 
-struct Asteroid;
-struct Position(Vec2);
-struct Size(f32);
-struct Sides(u8);
-struct Speed(f32);
-struct Direction(Vec2);
-struct Rotation(f32);
+use crate::components::*;
 
 const ASTEROID_COLOR_1: Color = Color::new(1.0, 0.07, 0.43, 1.0);
 const ASTEROID_COLOR_2: Color = Color::new(0.98, 1.0, 0.07, 1.0);

@@ -7,13 +7,7 @@ use macroquad::{
     shapes::*
 };
 
-struct Player;
-struct Position(Vec2);
-struct Size(f32);
-struct Speed(f32);
-struct Direction(Vec2);
-struct Rotation(f32);
-struct Life(u8);
+use crate::components::*;
 
 const PLAYER_COLOR_1: Color = Color::new(1.0 , 0.52 , 0.32 ,1.0);
 const PLAYER_COLOR_2: Color = Color::new(0.01 , 0.71 , 0.66 , 1.0);

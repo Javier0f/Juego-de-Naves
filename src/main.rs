@@ -5,10 +5,12 @@ use hecs::{World, Entity};
 mod player;
 mod collision;
 mod asteroids;
+mod components;
 
 use player::*;
 use collision::*;
 use asteroids::*;
+use components::*;
 
 struct Player;
 
@@ -44,14 +46,8 @@ struct Bullet{
 
 #[derive(Debug, Clone, Copy)]
 struct Velocity(Vec2);
-#[derive(Debug,Clone,Copy)]
-struct Size(f32);
-#[derive(Debug,Clone,Copy)]
-struct Speed(f32);
 #[derive(Debug)]
 struct Rot(f32);
-#[derive(Debug)]
-struct Sides(u8);
 #[derive(Debug)]
 struct Life(u8);
 
@@ -79,9 +75,10 @@ async fn main() {
         Life(100),
     ));
 
+    let mut collision_system = CollisionSystem::new();
+
     add_player(&mut world);
 
-    let color_asteroid_1 = Color::new(0.3, 0.1, 0.9, 1.0);
     let color_asteroid_2 = Color::new(0.2, 0.4, 0.95, 1.0);
     for _i in 0..30 {
         add_asteroid(&mut world);
@@ -125,8 +122,6 @@ async fn main() {
     let mut destroid_asteroid = [world.spawn(()); MAX_BULLET / 2];
 
     let mut last_position: Position = Position{x:0.0, y:0.0};
-
-    let mut center = Vec2::ZERO;
 
     loop{
         let dt = get_frame_time();
@@ -181,139 +176,10 @@ async fn main() {
             }
         }
 
-        for (enti,_type, pos, speed, vel, rot, life) in world.query_mut::<(Entity, &Player, &mut Position, &Speed, &mut Velocity, &mut Rot, &mut Life)> () {
-            let mut dir = Vec2::ZERO;
-            let rot_rad = rot.0.to_radians();
-            let mut state_particle = false;
-
-            if pos.x > 1920.0 + 30.0 {
-                pos.x = -30.0
-            }
-            if pos.x < -30.0{
-                pos.x = 1920.0 + 30.0
-            }
-            if pos.y > 1080.0 + 30.0 {
-                pos.y = -30.0
-            }
-            if pos.y < -30.0{
-                pos.y = 1080.0 + 30.0
-            }
-
-            entities_collide.iter().for_each(|collide| {
-                if collide.0 == enti{
-                    pos.x = collide.2.x;
-                    pos.y = collide.2.y;
-                    vel.0 = collide.1;
-
-                    life.0 -= 5;
-                }
-            });
-
-            if is_key_down(KeyCode::Up)   {
-                dir.x = rot_rad.sin();
-                dir.y = -rot_rad.cos();
-                state_particle = true;
-            }
-            if is_key_down(KeyCode::Down) {
-                dir.x = -rot_rad.sin();
-                dir.y = rot_rad.cos();
-                state_particle = true;
-            }
-            if is_key_down(KeyCode::Right){rot.0 += 3.0}
-            if is_key_down(KeyCode::Left) {rot.0 -= 3.0}
-
-            b_cooldown -= 0.1;
-            if is_key_down(KeyCode::A){
-
-                if b_index >= MAX_BULLET { b_index = 0};
-                if bullet_vec[b_index].life < 0.1 {
-                    if b_cooldown < 0.1 {
-                        let bullet = Bullet{
-                            pos: vec2(pos.x, pos.y),
-                            rot: vec2(rot_rad.sin() + rand::gen_range(-0.1,0.1),
-                                     -rot_rad.cos() + rand::gen_range(-0.1,0.1)
-                                    ).normalize(),
-                            vel: 10.0,
-                            life: 10.0,
-                        };
-                        
-                        bullet_vec[b_index] = bullet;
-                        b_cooldown = 0.8;
-                        b_index += 1;
-                    };
-                };
-            }
-
-
-
-            if dir.length_squared() > 0.0 {
-                dir = dir.normalize();
-            }
-
-            let target = dir * speed.0;
-
-            vel.0 = vel.0.lerp(target, 1.0 * dt);
-
-            pos.x += vel.0.x;
-            pos.y += vel.0.y;
-
-            if state_particle{    
-                if particles[p_index].life <= 0.0 {
-                    let p = Particle{
-                        pos: vec2(pos.x, pos.y),
-                        rot: vec2(
-                            -rot_rad.sin() + rand::gen_range(-0.5 , 0.5),
-                            rot_rad.cos() + rand::gen_range(-0.5 , 0.5)
-                        ),
-                        vel: 300.0,
-                        life: 1.5,
-                        size: rand::gen_range(10.0, 20.0),
-                        color: particle_color
-                    };
-
-                    particles[p_index] = p;
-                }
-
-                if p_index == MAX_PARTICLES - 1{
-                    p_index = 0;
-                }else{
-                    p_index += 1;
-                }
-            }
-        }
-
         player_movement(&mut world, dt);
         asteroid_movement(&mut world, dt);
-
-        for (entity, _type, pos, rot, vel, speed, size) in world.query_mut::<(Entity, &Asteriod, &mut Position, &mut Rot, &mut Velocity, &Speed, &Size)>(){
-
-            entities_collide.iter().for_each(|collide| {
-                if collide.0 == entity{
-                    pos.x = collide.2.x;
-                    pos.y = collide.2.y;
-                    vel.0 = collide.1
-                }
-            });
-
-            pos.x = pos.x + vel.0.x * speed.0 * dt;
-            pos.y = pos.y + vel.0.y * speed.0 * dt;
-
-            rot.0 = rot.0 + dt * speed.0;
-
-            if pos.x < size.0 * -1.{
-                pos.x = 1920.0 + size.0;
-            }
-            if pos.x > (1920.0 + size.0) {
-                pos.x = -1. * size.0
-            }
-
-            if pos.y < size.0 * -1.{
-                pos.y = 1080.0 + size.0;
-            }
-            if pos.y > (1080.0 + size.0){
-                pos.y = -1. * size.0
-            }
-        }
+        collision_system.process(&world);
+        collision_system.collision_check(&mut world);
 
         world.query_mut::<(Entity, &PartAsteroid, &mut Position, &mut Rot, &mut Velocity, &Speed, &Size)>().into_iter().for_each(|p|{
             let entity = p.0;
@@ -431,11 +297,6 @@ async fn main() {
             draw_line(vec_a.x, vec_a.y, vec_b.x, vec_b.y, 10.0 as f32, lifebar_color);
         }
 
-        for (_type, pos, size, sides, rot) in world.query::<(&Asteriod, &Position, &Size, &Sides, &Rot)>().iter() {
-            draw_poly_lines(pos.x, pos.y, sides.0, size.0, rot.0, 8.5, color_asteroid_1);
-            draw_poly_lines(pos.x, pos.y, sides.0, size.0 - (size.0 / 4.0), rot.0, 4.5, color_asteroid_2)
-        }
-
         world.query::<(&PartAsteroid, &Position, &Size, &Sides, &Rot)>().iter().for_each(|a|{
             draw_poly_lines(a.1.x, a.1.y, a.3.0, a.2.0, a.4.0, 4.5, color_asteroid_2)
         });
@@ -488,7 +349,8 @@ async fn main() {
             }
         });
 
-        entities_collide.clear();
+        // entities_collide.clear();
+        collision_system.clear();
         next_frame().await;
         // return
     }
