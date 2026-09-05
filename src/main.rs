@@ -4,11 +4,13 @@ use hecs::World;
 mod player;
 mod collision;
 mod asteroids;
+mod particles;
 mod components;
 
 use player::*;
 use collision::*;
 use asteroids::*;
+use particles::*;
 
 #[macroquad::main("Nave")]
 async fn main() {
@@ -17,6 +19,8 @@ async fn main() {
     let _background = Color::new(0.01, 0.01, 0.05, 1.0);
 
     let mut collision_system = CollisionSystem::new();
+
+    let mut paricle_system = ParticlesSystem::new();
 
     add_player(&mut world);
 
