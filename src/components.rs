@@ -19,7 +19,7 @@ pub struct Direction(pub Vec2);
 pub struct Rotation(pub f32);
 
 #[derive(Debug, Copy, Clone)]
-pub struct Life(pub u8);
+pub struct Life(pub f32);
 
 pub struct Player;
 pub struct Asteroid;

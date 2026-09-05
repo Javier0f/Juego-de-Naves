@@ -20,7 +20,7 @@ async fn main() {
 
     let mut collision_system = CollisionSystem::new();
 
-    let mut particle_system = ParticlesSystem::new();
+    let mut particle_system = ParticlesSystem::new(&mut world);
 
     add_player(&mut world);
 
@@ -41,8 +41,9 @@ async fn main() {
         
         // <----- MOVEMENT AND COLLISION -----> //
 
-        particle_system.query_player_position(&world);
-        particle_system.process();
+        // particle_system.query_player_position(&mut world);
+        // particle_system.process(&mut world);
+        particle_system.movement(&mut world);
         player_movement(&mut world, dt);
         asteroid_movement(&mut world, dt);
         collision_system.process(&world);
