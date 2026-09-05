@@ -1,8 +1,6 @@
 use hecs::World;
 use macroquad::{
-    input::{is_key_down, KeyCode},
     math::*, 
-    window::{screen_width, screen_height},
     color::*,
     shapes::*,
     rand
@@ -16,24 +14,28 @@ const ASTEROID_COLOR_2: Color = Color::new(0.98, 1.0, 0.07, 1.0);
 const SCREEN_WIDTH: f32 = 1920.0;
 const SCREEN_HEIGHT: f32 = 1080.0;
 
-pub fn add_asteroid(world: &mut World){
-    let rand_size = rand::gen_range(30.0, 90.0);
-    let rand_x = rand::gen_range(rand_size, SCREEN_WIDTH - rand_size);
-    let rand_y = rand::gen_range(rand_size, SCREEN_HEIGHT - rand_size);
-    let rand_sides = rand::gen_range(5, 11);
-    let rand_dir_x = rand::gen_range(-1.0, 1.0);
-    let rand_dir_y = rand::gen_range(-1.0, 1.0);
-    let rand_speed = rand::gen_range(60.0, 90.0);
+pub fn add_asteroid(world: &mut World, count: u8){
+    for _i in 0..count {
 
-    world.spawn((
-        Asteroid,
-        Position(vec2(rand_x, rand_y)),
-        Direction(vec2(rand_dir_x, rand_dir_y)),
-        Size(rand_size),
-        Sides(rand_sides),
-        Speed(rand_speed),
-        Rotation(0.0),
-    ));
+        let rand_size = rand::gen_range(30.0, 90.0);
+        let rand_x = rand::gen_range(rand_size, SCREEN_WIDTH - rand_size);
+        let rand_y = rand::gen_range(rand_size, SCREEN_HEIGHT - rand_size);
+        let rand_sides = rand::gen_range(5, 11);
+        let rand_dir_x = rand::gen_range(-1.0, 1.0);
+        let rand_dir_y = rand::gen_range(-1.0, 1.0);
+        let rand_speed = rand::gen_range(60.0, 90.0);
+    
+        world.spawn((
+            Asteroid,
+            Position(vec2(rand_x, rand_y)),
+            Direction(vec2(rand_dir_x, rand_dir_y)),
+            Size(rand_size),
+            Sides(rand_sides),
+            Speed(rand_speed),
+            Rotation(0.0),
+        ));
+    }
+
 }
 
 pub fn asteroid_movement(world: &mut World, dt: f32){

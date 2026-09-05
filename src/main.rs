@@ -9,7 +9,6 @@ mod components;
 use player::*;
 use collision::*;
 use asteroids::*;
-use components::*;
 
 #[macroquad::main("Nave")]
 async fn main() {
@@ -21,9 +20,7 @@ async fn main() {
 
     add_player(&mut world);
 
-    for _i in 0..30 {
-        add_asteroid(&mut world);
-    }
+    add_asteroid(&mut world, 30);
 
     let render_target = render_target(480,270);
 

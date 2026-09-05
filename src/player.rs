@@ -30,7 +30,7 @@ pub fn add_player(world: &mut  World){
 }
 
 pub fn player_movement(world: &mut World, dt: f32){
-    world.query_mut::<(&Player, &mut Position, &mut Direction, &Speed, &mut Rotation, &Size)>().into_iter().for_each(|(_player, pos, dir, speed, rot, size)|{
+    world.query_mut::<(&Player, &mut Position, &mut Direction, &Speed, &mut Rotation)>().into_iter().for_each(|(_player, pos, dir, speed, rot)|{
         let mut dire = Vec2::ZERO;
         let rot_rad = rot.0.to_radians();
 
