@@ -12,6 +12,7 @@ use crate::components::*;
 struct Particle;
 
 pub struct ParticlesSystem{
+    index: u8,
     particles: [(
         Particle,
         Position,
@@ -23,15 +24,8 @@ pub struct ParticlesSystem{
 
 impl ParticlesSystem{
     pub fn new() -> ParticlesSystem{
-        // let a = [(
-        //     Particle,
-        //     Position(Vec2::ZERO),
-        //     Direction(Vec2::ZERO),
-        //     Life(0),
-        //     Speed(0.0),
-        // ); 20];
-
         ParticlesSystem{
+            index: 0,
             particles: [(
                 Particle,
                 Position(Vec2::ZERO),
