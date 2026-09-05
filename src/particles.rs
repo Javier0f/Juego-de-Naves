@@ -23,16 +23,22 @@ pub struct ParticlesSystem{
 
 impl ParticlesSystem{
     pub fn new() -> ParticlesSystem{
-        let a = [(
-            Particle,
-            Position(Vec2::ZERO),
-            Direction(Vec2::ZERO),
-            Life(0),
-            Speed(0.0),
-        ); 20];
+        // let a = [(
+        //     Particle,
+        //     Position(Vec2::ZERO),
+        //     Direction(Vec2::ZERO),
+        //     Life(0),
+        //     Speed(0.0),
+        // ); 20];
 
         ParticlesSystem{
-            particles: a 
+            particles: [(
+                Particle,
+                Position(Vec2::ZERO),
+                Direction(Vec2::ZERO),
+                Life(0),
+                Speed(0.0),
+            ); 20]
         }
     }
 }
