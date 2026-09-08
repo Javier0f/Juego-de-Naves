@@ -1,6 +1,7 @@
 use hecs::{
     World,
     Entity,
+    Without
 };
 use macroquad::{
     math::*, 
@@ -20,8 +21,14 @@ impl CollisionSystem{
     }
 
     pub fn process(&mut self, world: &World){
-        world.query::<(Entity, &Position, &Size)>().iter().for_each(|(enti_a, pos_a, size_a)|{
-            world.query::<(Entity, &Position, &Size)>().iter().for_each(|(_enti_b, pos_b, size_b)|{
+        // world.query::<(Entity, &Position, &Size)>()
+        world.query::<Without<(Entity, &Position, &Size), &Particle>>()
+        .iter()
+        .for_each(|(enti_a, pos_a, size_a)|{
+            // world.query::<(Entity, &Position, &Size)>()
+            world.query::<Without<(Entity, &Position, &Size), &Particle>>()
+            .iter()
+            .for_each(|(_enti_b, pos_b, size_b)|{
                 let distance = pos_a.0.distance(pos_b.0);
                 let sum_radios = size_a.0 + size_b.0;
 

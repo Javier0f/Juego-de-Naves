@@ -14,7 +14,7 @@ const SCREEN_HEIGHT: f32 = 1080.0;
 
 const PLAYER_COLOR_1: Color = Color::new(1.0 , 0.52 , 0.32 ,1.0);
 const PLAYER_COLOR_2: Color = Color::new(0.01 , 0.71 , 0.66 , 1.0);
-const MAX_LIFE: f32 = 100.0;
+const MAX_LIFE: i8 = 100;
 const PLAYER_SIZE: f32 = 30.0;
 
 pub fn add_player(world: &mut  World){

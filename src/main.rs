@@ -41,7 +41,7 @@ async fn main() {
         
         // <----- MOVEMENT AND COLLISION -----> //
 
-        particle_system.movement(&mut world);
+        particle_system.movement(&mut world, dt);
         player_movement(&mut world, dt);
         asteroid_movement(&mut world, dt);
         collision_system.process(&world);
