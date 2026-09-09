@@ -25,6 +25,7 @@ pub struct ParticlesSystem{
     last_position: (Vec2,f32),
     index: usize,
     color: Color,
+    state: bool,
 }
 
 impl ParticlesSystem{
@@ -46,13 +47,15 @@ impl ParticlesSystem{
             last_position: (Vec2::ZERO, 0.0),
             index: 0,
             color: Color::new(0.3, 1.0, 1.0, 1.0),
+            state: false,
         }
     }
     
     pub fn movement(&mut self, world: &mut World, dt: f32){
-        world.query::<With<(&Position, &Rotation), &Player>>()
-        .iter().for_each(|(pos, rot)|{
+        world.query::<With<(&Position, &Rotation, &OnMove), &Player>>()
+        .iter().for_each(|(pos, rot, onmove)|{
             self.last_position = (pos.0, rot.0.to_radians());
+            self.state = onmove.0;
         });
 
         world.query_mut::<With::<(&Index, &mut Position, &mut Direction, &mut Size, &mut Life, &mut PColor), &Particle>>()
@@ -69,9 +72,9 @@ impl ParticlesSystem{
                 pcolor.3 -= 0.03;
 
                 dir.0 = vec2(
-                    -self.last_position.1.sin() + rand::gen_range(-2.0, 2.0),
-                    self.last_position.1.cos() + rand::gen_range(-2.0, 2.0)
-                ).normalize();
+                    -self.last_position.1.sin() + rand::gen_range(-1.5, 1.5),
+                     self.last_position.1.cos() + rand::gen_range(-1.5, 1.5)
+                );
 
                 if life.0 < PARTICLE_LIFE * 4/5 {
                     pcolor.0 -= 0.03;
@@ -86,7 +89,7 @@ impl ParticlesSystem{
                 draw_circle(pos.0.x, pos.0.y, size.0, self.color);
             }
             
-            if life.0 <= 0 && index.0 == self.index{
+            if life.0 <= 0 && index.0 == self.index && self.state{
                 size.0 = PARTICLE_SIZE;
                 pos.0 = self.last_position.0;
                 life.0 = PARTICLE_LIFE;

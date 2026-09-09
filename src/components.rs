@@ -21,6 +21,9 @@ pub struct Rotation(pub f32);
 #[derive(Debug, Copy, Clone)]
 pub struct Life(pub i8);
 
+#[derive(Debug, Copy, Clone)]
+pub struct OnMove(pub bool);
+
 pub struct Player;
 pub struct Asteroid;
 pub struct Particle;

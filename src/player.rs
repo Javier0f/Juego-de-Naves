@@ -1,4 +1,4 @@
-use hecs::World;
+use hecs::{World, With};
 use macroquad::{
     input::{is_key_down, KeyCode},
     math::*, 
@@ -16,6 +16,7 @@ const PLAYER_COLOR_1: Color = Color::new(1.0 , 0.52 , 0.32 ,1.0);
 const PLAYER_COLOR_2: Color = Color::new(0.01 , 0.71 , 0.66 , 1.0);
 const MAX_LIFE: i8 = 100;
 const PLAYER_SIZE: f32 = 30.0;
+const PLAYER_SPEED: f32 = 5.0;
 
 pub fn add_player(world: &mut  World){
     let _ = world.spawn((
@@ -24,15 +25,19 @@ pub fn add_player(world: &mut  World){
         Direction(Vec2::ZERO),
         Size(PLAYER_SIZE),
         Life(MAX_LIFE),
-        Speed(5.0),
+        OnMove(false),
         Rotation(0.0),
     ));
 }
 
 pub fn player_movement(world: &mut World, dt: f32){
-    world.query_mut::<(&Player, &mut Position, &mut Direction, &Speed, &mut Rotation)>().into_iter().for_each(|(_player, pos, dir, speed, rot)|{
+    // world.query_mut::<With<(&mut Position, &mut Direction, &mut Rotation), &Player>>()
+    world.query_mut::<With::<(&mut OnMove, &mut Position, &mut Direction, &mut Rotation), &Player>>()
+    .into_iter()
+    .for_each(|(onmove, pos, dir, rot)|{
         let mut dire = Vec2::ZERO;
         let rot_rad = rot.0.to_radians();
+        onmove.0 = false;
 
         if pos.0.x > SCREEN_WIDTH + PLAYER_SIZE{
             pos.0.x = -PLAYER_SIZE
@@ -50,17 +55,19 @@ pub fn player_movement(world: &mut World, dt: f32){
         if is_key_down(KeyCode::Up){
             dire.x = rot_rad.sin();
             dire.y = -rot_rad.cos();
+            onmove.0 = true;
         }
         if is_key_down(KeyCode::Down){
             dire.x = -rot_rad.sin();
             dire.y = rot_rad.cos();
+            onmove.0 = true;
         }
         if is_key_down(KeyCode::Right){rot.0 += 3.0}
         if is_key_down(KeyCode::Left){rot.0 -= 3.0}
 
         if dire.length_squared() > 0.0 {dire = dire.normalize()}
 
-        let target = dire * speed.0;
+        let target = dire * PLAYER_SPEED;
 
         dir.0 = dir.0.lerp(target, 1.0 * dt);
 
