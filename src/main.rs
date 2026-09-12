@@ -5,12 +5,14 @@ mod player;
 mod collision;
 mod asteroids;
 mod particles;
+mod bullets;
 mod components;
 
 use player::*;
 use collision::*;
 use asteroids::*;
 use particles::*;
+use bullets::*;
 
 #[macroquad::main("Nave")]
 async fn main() {
@@ -21,6 +23,8 @@ async fn main() {
     let mut collision_system = CollisionSystem::new();
 
     let mut particle_system = ParticlesSystem::new(&mut world);
+
+    let mut bullets = Bullets::new(&mut world);
 
     add_player(&mut world);
 
@@ -39,6 +43,7 @@ async fn main() {
         clear_background(_background);
 
         particle_system.movement(&mut world, dt);
+        bullets.process(&mut world);
         player_movement(&mut world, dt);
         asteroid_movement(&mut world, dt);
         collision_system.process(&world);
