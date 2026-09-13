@@ -24,7 +24,7 @@ async fn main() {
 
     let mut particle_system = ParticlesSystem::new(&mut world);
 
-    let mut bullets = Bullets::new(&mut world);
+    // let mut bullets = Bullets::new(&mut world);
 
     add_player(&mut world);
 
@@ -43,7 +43,8 @@ async fn main() {
         clear_background(_background);
 
         particle_system.movement(&mut world, dt);
-        bullets.process(&mut world);
+        // bullets.process(&mut world);
+        bullets(&mut world);
         player_movement(&mut world, dt);
         asteroid_movement(&mut world, dt);
         collision_system.process(&world);

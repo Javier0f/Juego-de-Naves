@@ -1,46 +1,65 @@
-use hecs::{World, With};
+use hecs::{World, With, Entity};
 use macroquad::{
     math::*, 
     color::*,
     shapes::*,
-    rand
+    input::*,
+    rand,
 };
 
 use crate::components::*;
 
-const BULLET_LIFE: f32 = 20.0;
-const BULLET_SPEED: f32 = 30.0;
+const BULLET_LIFE: i8 = 120;
+const BULLET_SPEED: f32 = 10.0;
 
 struct Bullet;
-struct Index(usize);
 
-pub struct Bullets{
-    index: usize,
-}
+pub fn bullets(world: &mut World){
+    let mut bullet = (
+        Bullet,
+        Position(Vec2::ZERO),
+        Direction(Vec2::ZERO),
+        Life(BULLET_LIFE),
+    );
 
-impl Bullets{
-    pub fn new(world: &mut World)->Bullets{
+    let mut bullets_despawn: Vec<Entity> = vec![];
 
-        for i in 0..30{
-            world.spawn((
-                Bullet,
-                Index(i),
-                Position(Vec2::ZERO),
-                Direction(Vec2::ZERO),
-                Speed(BULLET_SPEED),
-                Life(0),
-            ));
-        }
-        Bullets{
-            index: 0
-        }
-    }
+    let mut cooldown: u8 = 0;
 
-    pub fn process(&mut self, world: &mut World){
+    if is_key_down(KeyCode::A){
         world.query::<With<(&Position, &Rotation), &Player>>()
         .iter()
         .for_each(|(pos, rot)|{
-            println!("{}  {}", pos.0, rot.0);
+            bullet.1 = *pos;
+            bullet.2.0.y = -rot.0.to_radians().cos() + rand::gen_range(-0.1,0.1);
+            bullet.2.0.x = rot.0.to_radians().sin() + rand::gen_range(-0.1,0.1);
+            bullet.2.0 = bullet.2.0.normalize();
         });
+        world.spawn(bullet);
+    }
+
+
+    world.query_mut::<With<(Entity, &mut Position, &Direction, &mut Life), &Bullet>>()
+    .into_iter()
+    .for_each(|(e, pos, dir, life)|{
+        if life.0 > 0{
+            draw_circle(pos.0.x, pos.0.y, 10.0, RED);
+
+            life.0 -= 1;
+            pos.0 += dir.0 * BULLET_SPEED;
+        }
+
+        if life.0 == 0 {
+            bullets_despawn.push(e);
+        }
+        cooldown += 1;
+        println!("{}", cooldown);
+    });
+
+    if bullets_despawn.len() > 0 {
+        bullets_despawn.iter().for_each(|e|{
+            let _ =world.despawn(*e);
+        });
+        bullets_despawn.clear();
     }
 }
