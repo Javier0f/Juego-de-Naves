@@ -24,10 +24,9 @@ async fn main() {
 
     let mut particle_system = ParticlesSystem::new(&mut world);
 
-    // let mut bullets = Bullets::new(&mut world);
+    let mut cooldown: u8 = 0;
 
     add_player(&mut world);
-
     add_asteroid(&mut world, 30);
 
     let render_target = render_target(480,270);
@@ -43,9 +42,8 @@ async fn main() {
         clear_background(_background);
 
         particle_system.movement(&mut world, dt);
-        // bullets.process(&mut world);
-        bullets(&mut world);
-        player_movement(&mut world, dt);
+        bullets(&mut world, dt, &mut cooldown);
+        inputs_player(&mut world, dt);
         asteroid_movement(&mut world, dt);
         collision_system.process(&world);
         collision_system.collision_check(&mut world);

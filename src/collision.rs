@@ -1,7 +1,7 @@
 use hecs::{
     World,
     Entity,
-    Without
+    With
 };
 use macroquad::{
     math::*, 
@@ -13,6 +13,14 @@ pub struct CollisionSystem{
     collision: Vec<(Entity, Vec2, Vec2)>
 }
 
+pub fn collisionsystem(world: &mut World){
+    world.query::<With<(Entity, &Position, &Size), &Collide>>()
+    .iter()
+    .for_each(|(enti_a, pos_a, size_a)| {
+
+    })
+}
+
 impl CollisionSystem{
     pub fn new() -> CollisionSystem{
         CollisionSystem{
@@ -22,11 +30,11 @@ impl CollisionSystem{
 
     pub fn process(&mut self, world: &World){
         // world.query::<(Entity, &Position, &Size)>()
-        world.query::<Without<(Entity, &Position, &Size), &Particle>>()
+        world.query::<With<(Entity, &Position, &Size), &Collide>>()
         .iter()
         .for_each(|(enti_a, pos_a, size_a)|{
             // world.query::<(Entity, &Position, &Size)>()
-            world.query::<Without<(Entity, &Position, &Size), &Particle>>()
+            world.query::<With<(Entity, &Position, &Size), &Collide>>()
             .iter()
             .for_each(|(_enti_b, pos_b, size_b)|{
                 let distance = pos_a.0.distance(pos_b.0);
@@ -34,13 +42,13 @@ impl CollisionSystem{
 
                 if distance < sum_radios && distance > 0.0{
                         
-                let repulsion = (pos_a.0 - pos_b.0).normalize();
-                let new_pos = vec2(
-                    pos_a.0.x + repulsion.x * ((sum_radios - distance) * 0.5),
-                    pos_a.0.y + repulsion.y * ((sum_radios - distance) * 0.5),
-                );
+                    let repulsion = (pos_a.0 - pos_b.0).normalize();
+                    let new_pos = vec2(
+                        pos_a.0.x + repulsion.x * ((sum_radios - distance) * 0.5),
+                        pos_a.0.y + repulsion.y * ((sum_radios - distance) * 0.5),
+                    );
 
-                self.collision.push((enti_a, repulsion, new_pos));
+                    self.collision.push((enti_a, repulsion, new_pos));
                 }
             });
         });

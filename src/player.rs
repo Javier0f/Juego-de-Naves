@@ -21,6 +21,7 @@ const PLAYER_SPEED: f32 = 5.0;
 pub fn add_player(world: &mut  World){
     let _ = world.spawn((
         Player,
+        Collide,
         Position(vec2((screen_width() + PLAYER_SIZE) / 2.0, (screen_height() + PLAYER_SIZE) / 2.0)),
         Direction(Vec2::ZERO),
         Size(PLAYER_SIZE),
@@ -30,8 +31,7 @@ pub fn add_player(world: &mut  World){
     ));
 }
 
-pub fn player_movement(world: &mut World, dt: f32){
-    // world.query_mut::<With<(&mut Position, &mut Direction, &mut Rotation), &Player>>()
+pub fn inputs_player(world: &mut World, dt: f32){
     world.query_mut::<With::<(&mut OnMove, &mut Position, &mut Direction, &mut Rotation), &Player>>()
     .into_iter()
     .for_each(|(onmove, pos, dir, rot)|{

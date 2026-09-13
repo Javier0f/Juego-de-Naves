@@ -27,6 +27,7 @@ pub fn add_asteroid(world: &mut World, count: u8){
     
         world.spawn((
             Asteroid,
+            Collide,
             Position(vec2(rand_x, rand_y)),
             Direction(vec2(rand_dir_x, rand_dir_y)),
             Size(rand_size),

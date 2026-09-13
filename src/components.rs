@@ -24,6 +24,8 @@ pub struct Life(pub i8);
 #[derive(Debug, Copy, Clone)]
 pub struct OnMove(pub bool);
 
+pub struct Collide;
+
 pub struct Player;
 pub struct Asteroid;
 pub struct Particle;
