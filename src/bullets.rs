@@ -14,16 +14,13 @@ const BULLET_SPEED: f32 = 450.0;
 const MAX_COOLDOWN: u8 = 20;
 const SPAWN_DISTANCE: f32 = 55.0;
 
-struct Bullet;
-
 pub fn bullets(world: &mut World, dt: f32, cooldown: &mut u8){
     let mut bullet = (
         Bullet,
         Position(Vec2::ZERO),
         Direction(Vec2::ZERO),
         Life(BULLET_LIFE),
-        Collide,
-        Size(5.0)
+        Size(5.0),
     );
 
     let mut bullets_despawn: Vec<Entity> = vec![];
@@ -74,4 +71,26 @@ pub fn bullets(world: &mut World, dt: f32, cooldown: &mut u8){
         });
         bullets_despawn.clear();
     }
+
+    let mut collision = [(Vec2::ZERO, 0.0);30];
+    let mut index: usize = 0;
+
+    world.query::<With<(&Position, &Size), &Asteroid>>()
+    .iter()
+    .for_each(|(pos, size)| {
+        collision[index] = (pos.0,size.0);
+        index += 1;
+    });
+
+    world.query_mut::<With<(&Position, &mut Life),&Bullet>>()
+    .into_iter()
+    .for_each(|(pos, life)|{
+        collision.iter().for_each(|(pos_a, size)|{
+            // let dis = pos.0.distance(*pos_a);
+            if (pos.0.distance(*pos_a) - size) < 0.0{
+                life.0 = 0;
+            }
+        });
+    });
+
 }

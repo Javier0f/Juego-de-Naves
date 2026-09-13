@@ -57,6 +57,11 @@ impl ParticlesSystem{
             self.last_position = (pos.0, rot.0.to_radians());
             self.state = onmove.0;
         });
+        world.query::<With<(&Position, &Rotation, &OnMove), &Bullet>>()
+        .iter().for_each(|(pos, rot, onmove)|{
+            self.last_position = (pos.0, rot.0.to_radians());
+            self.state = onmove.0;
+        });
 
         world.query_mut::<With::<(&Index, &mut Position, &mut Direction, &mut Size, &mut Life, &mut PColor), &Particle>>()
         .into_iter()

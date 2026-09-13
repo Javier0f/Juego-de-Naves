@@ -20,8 +20,6 @@ async fn main() {
 
     let _background = Color::new(0.01, 0.01, 0.05, 1.0);
 
-    let mut collision_system = CollisionSystem::new();
-
     let mut particle_system = ParticlesSystem::new(&mut world);
 
     let mut cooldown: u8 = 0;
@@ -45,8 +43,7 @@ async fn main() {
         bullets(&mut world, dt, &mut cooldown);
         inputs_player(&mut world, dt);
         asteroid_movement(&mut world, dt);
-        collision_system.process(&world);
-        collision_system.collision_check(&mut world);
+        collision_system(&mut world);
 
         set_default_camera();
         clear_background(BLACK);
@@ -63,7 +60,6 @@ async fn main() {
             },
         );
 
-        collision_system.clear();
         next_frame().await;
     }
 }
