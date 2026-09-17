@@ -3,8 +3,6 @@ use macroquad::{color::*, math::*, rand, shapes::*, text::*};
 
 use crate::components::*;
 
-struct Fragment;
-
 const ASTEROID_COLOR_1: Color = Color::new(1.0, 0.07, 0.43, 1.0);
 const ASTEROID_COLOR_2: Color = Color::new(0.98, 1.0, 0.07, 1.0);
 
@@ -38,31 +36,11 @@ pub fn add_asteroid(world: &mut World, count: u8) {
     }
 }
 
-pub fn asteroid_movement(world: &mut World, dt: f32) {
-    let mut delete_pool: Vec<Entity> = vec![];
-    let mut spawn_fragment_pool: Vec<Vec2> = vec![];
-
+pub fn movement(world: &mut World, dt: f32) {
     world
-        .query_mut::<With<
-            (
-                Entity,
-                &Life,
-                &mut Position,
-                &Direction,
-                &Size,
-                &mut Rotation,
-                &Speed,
-                &Sides,
-            ),
-            &Asteroid,
-        >>()
+        .query_mut::<(&mut Position, &Direction, &Size, &mut Rotation, &Speed)>()
         .into_iter()
-        .for_each(|(e, life, pos, dir, size, rot, speed, sides)| {
-            if life.0 <= 0 as i8 {
-                delete_pool.push(e);
-                spawn_fragment_pool.push(pos.0);
-            }
-
+        .for_each(|(pos, dir, size, rot, speed)| {
             pos.0 += dir.0 * speed.0 * dt;
 
             rot.0 += speed.0 * dt * dir.0.x;
@@ -74,12 +52,27 @@ pub fn asteroid_movement(world: &mut World, dt: f32) {
             if pos.0.x > (SCREEN_WIDTH + size.0) {
                 pos.0.x = -size.0;
             }
-
             if pos.0.y < -size.0 {
                 pos.0.y = SCREEN_HEIGHT + size.0;
             }
             if pos.0.y > (SCREEN_HEIGHT + size.0) {
                 pos.0.y = -size.0;
+            }
+        });
+}
+
+pub fn render(world: &mut World) {
+    let mut delete_pool: Vec<Entity> = vec![];
+    let mut spawn_fragment_pool: Vec<Vec2> = vec![];
+
+    world
+        .query_mut::<With<(Entity, &Life, &mut Position, &Size, &mut Rotation, &Sides), &Asteroid>>(
+        )
+        .into_iter()
+        .for_each(|(e, life, pos, size, rot, sides)| {
+            if life.0 <= 0 {
+                delete_pool.push(e);
+                spawn_fragment_pool.push(pos.0);
             }
 
             draw_text(format!("{:?}", life.0), pos.0.x, pos.0.y, 60.0, RED);
@@ -104,13 +97,12 @@ pub fn asteroid_movement(world: &mut World, dt: f32) {
         });
 
     world
-        .query_mut::<With<(&mut Position, &Direction, &Sides, &mut Rotation), &Fragment>>()
+        .query_mut::<With<(Entity, &mut Position, &Sides, &mut Rotation, &mut Life), &Fragment>>()
         .into_iter()
-        .for_each(|(pos, dir, sides, rot)| {
-            pos.0 += dir.0 * FRAGMENT_SPEED * dt;
-
-            rot.0 += FRAGMENT_SPEED * dt * dir.0.x;
-            rot.0 %= 360.0;
+        .for_each(|(e, pos, sides, rot, life)| {
+            if life.0 <= 0 as i8 {
+                delete_pool.push(e);
+            }
 
             draw_poly_lines(
                 pos.0.x,
@@ -135,6 +127,8 @@ pub fn asteroid_movement(world: &mut World, dt: f32) {
                 Position(*pos),
                 Direction(vec2(rand::gen_range(-1.0, 1.0), rand::gen_range(-1.0, 1.0))),
                 Sides(rand::gen_range(3, 5)),
+                Size(FRAGMENT_SIZE),
+                Speed(FRAGMENT_SPEED),
                 Rotation(0.0),
                 Life(1),
             ));

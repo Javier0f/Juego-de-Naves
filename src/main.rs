@@ -42,7 +42,8 @@ async fn main() {
         particle_system.movement(&mut world, dt);
         bullets(&mut world, dt, &mut cooldown);
         inputs_player(&mut world, dt);
-        asteroid_movement(&mut world, dt);
+        render(&mut world);
+        movement(&mut world, dt);
         collision_system(&mut world);
 
         set_default_camera();

@@ -61,6 +61,19 @@ pub fn bullets(world: &mut World, dt: f32, cooldown: &mut u8) {
             })
         });
 
+    world
+        .query_mut::<With<(&Position, &Size, &mut Life), &Fragment>>()
+        .into_iter()
+        .for_each(|(pos, size, life)| {
+            collision.iter().for_each(|(pos_b, e)| {
+                // let is_hit = (pos.0.distance_squared(*pos_b) < size.0 * size.0) as i8;
+                if pos.0.distance_squared(*pos_b) < size.0 * size.0 {
+                    bullets_despawn.push(*e);
+                    life.0 -= 1;
+                }
+            })
+        });
+
     bullets_despawn.iter().for_each(|e| {
         let _ = world.despawn(*e);
     });

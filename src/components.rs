@@ -26,6 +26,8 @@ pub struct OnMove(pub bool);
 
 pub struct Collide;
 
+pub struct Fragment;
+
 pub struct Player;
 pub struct Bullet;
 pub struct Asteroid;
