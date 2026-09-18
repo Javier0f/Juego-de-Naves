@@ -4,7 +4,7 @@ use macroquad::{color::*, input::*, math::*, rand, shapes::*};
 use crate::components::*;
 
 const BULLET_LIFE: i8 = 120;
-const BULLET_SPEED: f32 = 450.0;
+const BULLET_SPEED: f32 = 550.0;
 const MAX_COOLDOWN: u8 = 20;
 
 pub fn bullets(world: &mut World, dt: f32, cooldown: &mut u8) {

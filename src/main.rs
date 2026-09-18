@@ -6,6 +6,7 @@ mod collision;
 mod asteroids;
 mod particles;
 mod bullets;
+mod lifebar;
 mod components;
 
 use player::*;
@@ -13,6 +14,7 @@ use collision::*;
 use asteroids::*;
 use particles::*;
 use bullets::*;
+use lifebar::*;
 
 #[macroquad::main("Nave")]
 async fn main() {
@@ -45,6 +47,7 @@ async fn main() {
         render(&mut world);
         movement(&mut world, dt);
         collision_system(&mut world);
+        lifebar(&mut world, dt);
 
         set_default_camera();
         clear_background(BLACK);
