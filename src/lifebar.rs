@@ -1,5 +1,5 @@
-use hecs::{Entity, With, World};
-use macroquad::{color::*, input::*, math::*, rand, shapes::*};
+use hecs::{With, World};
+use macroquad::{color::*, math::*, shapes::*};
 
 use crate::components::*;
 
@@ -24,25 +24,14 @@ pub fn lifebar(world: &mut World) {
         .query_mut::<With<(&Position, &Rotation, &mut Life, &Size), &Player>>()
         .into_iter()
         .for_each(|(pos_p, rot_p, life_p, size)| {
-            // life_p.0 -= asteroid_pos
-            //     .iter()
-            //     .any(|(p, z)| pos_p.0.distance_squared(*p) < (size.0 + z).powi(2) * 3.0 / 4.0)
-            //     as i8;
-            asteroid_pos.iter().for_each(|(p, z)| {
-                let dis = p.distance_squared(pos_p.0);
-
-                if dis < (z + size.0).powi(2) + 100.0 {
-                    println!("{:?} {:?}", dis, (z + size.0).powi(2));
-                    draw_line(p.x, p.y, pos_p.0.x, pos_p.0.y, 10.0, BLUE)
-                } else {
-                    draw_line(p.x, p.y, pos_p.0.x, pos_p.0.y, 10.0, YELLOW);
-                }
-            });
+            life_p.0 -= asteroid_pos
+                .iter()
+                .any(|(p, z)| pos_p.0.distance_squared(*p) < (size.0 + z).powi(2) + 100.0)
+                as i8;
 
             pos = pos_p.0;
             rot = rot_p.0.to_radians();
-
-            // println!("{:?}", life_p.0);
+            println!("{:?}", life_p.0);
         });
 
     let pos1 = vec2(
