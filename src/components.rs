@@ -32,3 +32,5 @@ pub struct Player;
 pub struct Bullet;
 pub struct Asteroid;
 pub struct Particle;
+
+pub const MAX_LIFE: i8 = 100;
