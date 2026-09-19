@@ -47,7 +47,7 @@ async fn main() {
         render(&mut world);
         movement(&mut world, dt);
         collision_system(&mut world);
-        lifebar(&mut world, dt);
+        lifebar(&mut world);
 
         set_default_camera();
         clear_background(BLACK);
