@@ -7,6 +7,7 @@ mod asteroids;
 mod particles;
 mod bullets;
 mod lifebar;
+mod game_state;
 mod components;
 
 use player::*;
@@ -15,6 +16,7 @@ use asteroids::*;
 use particles::*;
 use bullets::*;
 use lifebar::*;
+use game_state::*;
 
 #[macroquad::main("Nave")]
 async fn main() {
@@ -23,6 +25,8 @@ async fn main() {
     let _background = Color::new(0.01, 0.01, 0.05, 1.0);
 
     let mut particle_system = ParticlesSystem::new(&mut world);
+
+    let mut game = Game::new();
 
     let mut cooldown: u8 = 0;
 
@@ -41,13 +45,26 @@ async fn main() {
         set_camera(&retro_camera);
         clear_background(_background);
 
-        particle_system.movement(&mut world, dt);
-        bullets(&mut world, dt, &mut cooldown);
-        inputs_player(&mut world, dt);
-        render(&mut world);
-        movement(&mut world, dt);
-        collision_system(&mut world);
-        lifebar(&mut world);
+        match game.state {
+            GameState::RUN =>{
+                particle_system.movement(&mut world, dt);
+                bullets(&mut world, dt, &mut cooldown);
+                inputs_player(&mut world, dt);
+                render(&mut world);
+                movement(&mut world, dt);
+                collision_system(&mut world);
+                lifebar(&mut world);
+            },
+            _ => ()
+        }
+
+        // particle_system.movement(&mut world, dt);
+        // bullets(&mut world, dt, &mut cooldown);
+        // inputs_player(&mut world, dt);
+        // render(&mut world);
+        // movement(&mut world, dt);
+        // collision_system(&mut world);
+        // lifebar(&mut world);
 
         set_default_camera();
         clear_background(BLACK);
