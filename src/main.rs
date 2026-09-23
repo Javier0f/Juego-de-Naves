@@ -1,4 +1,8 @@
-use macroquad::prelude::*;
+use macroquad::{
+    prelude::*,
+    ui::*,
+    text::load_ttf_font,
+};
 use hecs::World;
 
 mod player;
@@ -8,6 +12,7 @@ mod particles;
 mod bullets;
 mod lifebar;
 mod game_state;
+mod menu;
 mod components;
 
 use player::*;
@@ -17,6 +22,7 @@ use particles::*;
 use bullets::*;
 use lifebar::*;
 use game_state::*;
+use menu::*;
 
 #[macroquad::main("Nave")]
 async fn main() {
@@ -40,6 +46,38 @@ async fn main() {
     let mut retro_camera = Camera2D::from_display_rect(Rect::new(0.0, 0.0, 1920.0, 1080.0));
     retro_camera.render_target = Some(render_target.clone());
 
+    // ESTILO DE LA INTERFAZ
+    let skin1 = {
+        let font = load_ttf_font("./font/press-start-2p-latin-400-normal.ttf")
+        .await
+        .unwrap();
+
+        let label_style = root_ui()
+        .style_builder()
+        .with_font(&font)
+        .unwrap()
+        .text_color(Color::from_rgba(40, 40, 26, 255))
+        .font_size(30)
+        .build();
+
+        let button_style = root_ui()
+        .style_builder()
+        .color(Color::from_rgba(180, 180, 120, 255))
+        .with_font(&font)
+        .unwrap()
+        .build();
+
+        Skin {
+            button_style,
+            label_style,
+            ..root_ui().default_skin()
+        }
+    };
+
+    let win1 = skin1.clone();
+
+    root_ui().push_skin(&win1);
+
     loop{
         let dt = get_frame_time();
         set_camera(&retro_camera);
@@ -53,18 +91,16 @@ async fn main() {
                 render(&mut world);
                 movement(&mut world, dt);
                 collision_system(&mut world);
-                lifebar(&mut world);
+                lifebar(&mut world, &mut game);
             },
+            GameState::MENU => {
+                main_menu(&mut game);
+            },
+            GameState::END => {
+                end(&mut game)
+            }
             _ => ()
         }
-
-        // particle_system.movement(&mut world, dt);
-        // bullets(&mut world, dt, &mut cooldown);
-        // inputs_player(&mut world, dt);
-        // render(&mut world);
-        // movement(&mut world, dt);
-        // collision_system(&mut world);
-        // lifebar(&mut world);
 
         set_default_camera();
         clear_background(BLACK);

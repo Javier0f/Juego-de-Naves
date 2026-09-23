@@ -1,5 +1,6 @@
 pub enum GameState {
     RUN,
+    END,
     MENU,
     PAUSE,
 }
@@ -11,7 +12,7 @@ pub struct Game {
 impl Game {
     pub fn new() -> Game {
         Game {
-            state: GameState::RUN,
+            state: GameState::MENU,
         }
     }
 
@@ -20,6 +21,7 @@ impl Game {
             1 => self.state = GameState::RUN,
             2 => self.state = GameState::MENU,
             3 => self.state = GameState::PAUSE,
+            4 => self.state = GameState::END,
             _ => println!("state not found"),
         }
     }

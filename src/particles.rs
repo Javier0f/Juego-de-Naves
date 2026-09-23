@@ -84,12 +84,10 @@ impl ParticlesSystem {
 
                     pcolor.3 -= 0.03;
 
-                    if self.last_position.0 != Vec2::ZERO {
-                        dir.0 = vec2(
-                            -self.last_position.1.sin() + rand::gen_range(-1.5, 1.5),
-                            self.last_position.1.cos() + rand::gen_range(-1.5, 1.5),
-                        );
-                    }
+                    dir.0 = vec2(
+                        -self.last_position.1.sin() + rand::gen_range(-1.5, 1.5),
+                        self.last_position.1.cos() + rand::gen_range(-1.5, 1.5),
+                    );
 
                     if life.0 < PARTICLE_LIFE * 4 / 5 {
                         pcolor.0 -= 0.03;
@@ -119,6 +117,5 @@ impl ParticlesSystem {
         } else {
             self.index += 1
         }
-        self.last_position.0 = Vec2::ZERO;
     }
 }
