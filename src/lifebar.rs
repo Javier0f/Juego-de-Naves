@@ -3,7 +3,7 @@ use macroquad::{color::*, math::*, shapes::*};
 
 use crate::components::*;
 
-use crate::game_state::Game;
+use crate::states::game_state::Game;
 
 const DISTANCE: f32 = 40.0;
 

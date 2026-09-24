@@ -1,7 +1,7 @@
 use hecs::{With, World};
 use macroquad::{
     color::*,
-    input::{is_key_down, KeyCode},
+    input::{KeyCode, is_key_down},
     math::*,
     shapes::*,
     window::{screen_height, screen_width},

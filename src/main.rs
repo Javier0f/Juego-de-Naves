@@ -1,28 +1,18 @@
-use macroquad::{
-    prelude::*,
-    ui::*,
-    text::load_ttf_font,
-};
 use hecs::World;
+use macroquad::{prelude::*, ui::root_ui};
 
-mod player;
 mod collision;
-mod asteroids;
-mod particles;
-mod bullets;
-mod lifebar;
-mod game_state;
-mod menu;
 mod components;
+mod entitys;
+mod lifebar;
+mod states;
+mod ui_style;
 
-use player::*;
 use collision::*;
-use asteroids::*;
-use particles::*;
-use bullets::*;
+use entitys::{asteroids::*, bullets::*, particles::*, player::*};
 use lifebar::*;
-use game_state::*;
-use menu::*;
+use states::{game_state::*, menu::*};
+use ui_style::*;
 
 #[macroquad::main("Nave")]
 async fn main() {
@@ -39,52 +29,24 @@ async fn main() {
     add_player(&mut world);
     add_asteroid(&mut world, 30);
 
-    let render_target = render_target(480,270);
+    let render_target = render_target(480, 270);
 
     render_target.texture.set_filter(FilterMode::Nearest);
 
     let mut retro_camera = Camera2D::from_display_rect(Rect::new(0.0, 0.0, 1920.0, 1080.0));
     retro_camera.render_target = Some(render_target.clone());
 
-    // ESTILO DE LA INTERFAZ
-    let skin1 = {
-        let font = load_ttf_font("./font/press-start-2p-latin-400-normal.ttf")
-        .await
-        .unwrap();
+    let skin1 = ui_skin().await;
 
-        let label_style = root_ui()
-        .style_builder()
-        .with_font(&font)
-        .unwrap()
-        .text_color(Color::from_rgba(40, 40, 26, 255))
-        .font_size(30)
-        .build();
+    root_ui().push_skin(&skin1);
 
-        let button_style = root_ui()
-        .style_builder()
-        .color(Color::from_rgba(180, 180, 120, 255))
-        .with_font(&font)
-        .unwrap()
-        .build();
-
-        Skin {
-            button_style,
-            label_style,
-            ..root_ui().default_skin()
-        }
-    };
-
-    let win1 = skin1.clone();
-
-    root_ui().push_skin(&win1);
-
-    loop{
+    loop {
         let dt = get_frame_time();
         set_camera(&retro_camera);
         clear_background(_background);
 
         match game.state {
-            GameState::RUN =>{
+            GameState::RUN => {
                 particle_system.movement(&mut world, dt);
                 bullets(&mut world, dt, &mut cooldown);
                 inputs_player(&mut world, dt);
@@ -92,14 +54,12 @@ async fn main() {
                 movement(&mut world, dt);
                 collision_system(&mut world);
                 lifebar(&mut world, &mut game);
-            },
+            }
             GameState::MENU => {
                 main_menu(&mut game);
-            },
-            GameState::END => {
-                end(&mut game)
             }
-            _ => ()
+            GameState::END => end(&mut game),
+            _ => (),
         }
 
         set_default_camera();
@@ -110,7 +70,7 @@ async fn main() {
             0.0,
             0.0,
             WHITE,
-            DrawTextureParams{
+            DrawTextureParams {
                 dest_size: Some(vec2(screen_width(), screen_height())),
                 flip_y: true,
                 ..Default::default()
