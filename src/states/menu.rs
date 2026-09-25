@@ -1,3 +1,4 @@
+use hecs::World;
 use macroquad::{
     color::*,
     math::*,
@@ -8,6 +9,8 @@ use macroquad::{
 
 use crate::states::game_state::Game;
 
+use crate::entitys::{asteroids::*, bullets::*, particles::*, player::*};
+
 pub fn main_menu(game: &mut Game) {
     let mid_window = vec2(screen_width() / 2.0, screen_height() / 2.0);
 
@@ -16,7 +19,7 @@ pub fn main_menu(game: &mut Game) {
     }
 }
 
-pub fn end(game: &mut Game) {
+pub fn end(game: &mut Game, world: &mut World) {
     let mid_window = vec2(screen_width() / 2.0, screen_height() / 2.0);
 
     draw_text(
@@ -28,6 +31,9 @@ pub fn end(game: &mut Game) {
     );
 
     if root_ui().button(mid_window, "[Restart]") {
+        world.clear();
+        add_player(world);
+        add_asteroid(world, 30);
         game.switch(2)
     }
 }

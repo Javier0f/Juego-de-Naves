@@ -58,7 +58,9 @@ async fn main() {
             GameState::MENU => {
                 main_menu(&mut game);
             }
-            GameState::END => end(&mut game),
+            GameState::END => {
+                end(&mut game, &mut world);
+            },
             _ => (),
         }
 
