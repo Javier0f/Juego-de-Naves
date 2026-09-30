@@ -59,7 +59,7 @@ async fn main() {
                 main_menu(&mut game);
             }
             GameState::END => {
-                end(&mut game, &mut world);
+                end(&mut game, &mut world, &mut particle_system);
             },
             _ => (),
         }

@@ -7,9 +7,8 @@ use macroquad::{
     window::{screen_height, screen_width},
 };
 
+use crate::entitys::{asteroids::*, particles::*, player::*};
 use crate::states::game_state::Game;
-
-use crate::entitys::{asteroids::*, bullets::*, particles::*, player::*};
 
 pub fn main_menu(game: &mut Game) {
     let mid_window = vec2(screen_width() / 2.0, screen_height() / 2.0);
@@ -19,7 +18,7 @@ pub fn main_menu(game: &mut Game) {
     }
 }
 
-pub fn end(game: &mut Game, world: &mut World) {
+pub fn end(game: &mut Game, world: &mut World, particlesys: &mut ParticlesSystem) {
     let mid_window = vec2(screen_width() / 2.0, screen_height() / 2.0);
 
     draw_text(
@@ -34,6 +33,7 @@ pub fn end(game: &mut Game, world: &mut World) {
         world.clear();
         add_player(world);
         add_asteroid(world, 30);
+        *particlesys = ParticlesSystem::new(world);
         game.switch(2)
     }
 }
